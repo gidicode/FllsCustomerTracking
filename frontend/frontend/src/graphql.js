@@ -1,21 +1,39 @@
-/*import gql from "graphql-tag"
-import { provideApolloclient, useQuery, useResult} from '@vue/apollo-composable'
-import { ApolloClient, InMemomryCache, createHttpLink } from '@apollo/client/core'
-import { onError } from '@apollo/client/link/error'
-import { logErrorMessages } from '@vue/apollo-util'
+import gql from "graphql-tag"
+import { useQuery, useResult} from '@vue/apollo-composable'
+import { provideApolloClient} from '@vue/apollo-composable'
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client/core'
 
-const errorlink = onError( error => {
-    logErrorMessages(error)
+const Headers = () => {
+    const headers = {}
+    const token = window.localStorage.getItem("token")
+
+    if (token) {        
+        headers.authorization = `jwt ${token}`
+    }
+    return headers
+}
+
+const cache = new  InMemoryCache()
+const link = createHttpLink({
+    uri: 'http://localhost:8000/graphql',
+    fetch,
+    headers: Headers()
 })
-
-const cache = new InMemomryCache()
-const link = createHttpLink({ uri:'http://localhost:8000/graphql'})
-const apolloClient = new ApolloClient({
-    cache, link: errorlink.concat(link)
+const apolloClient  = new ApolloClient({   
+    cache, link
 })
-provideApolloclient(apolloClient)
+provideApolloClient(apolloClient)
 
-const { result } = useQuery(gql`
-    query 
+
+const { result:GetRider } = useQuery(gql`
+    query  GetRider {
+        ridersList{
+            id
+            riderName
+            riderNumber
+        }
+    }
 `)
-*/
+
+export const GetRiders = useResult(GetRider)
+

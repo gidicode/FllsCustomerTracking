@@ -28,15 +28,16 @@
                 
             </div>
         </div>
-    </div>
+    </div>        
 </template>
 
 <script>
 import { useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
-import { ref } from '@vue/reactivity'
-import axios from 'axios'
+import { computed, ref } from '@vue/reactivity'
+import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { onMounted } from '@vue/runtime-core'
 
 export default {
 
@@ -47,15 +48,29 @@ export default {
     const password = ref('')
     const error = ref('')
     const router = useRouter()        
+    const store = useStore()
 
-    function redirect() {
+    const logInUser = () => store.dispatch('loginSuccess')
+    const logoutUser = () => store.dispatch('logout')
+    const getState = computed(() => store.state.authenticated)
+
+    function redirectToDashboard() {
         router.push({
             name: 'Dashboard',
         })
     }
+    function redirectTologin() {
+        router.push({
+            name: 'Login',
+        })
+    }
 
-    const response = await axios.get('user')
-    console.log(response)
+    onMounted(() => {
+        if (getState.value.status) {
+            redirectToDashboard() 
+        }
+    })
+    
 
     const {mutate: login, onDone, loading:loginLoading } = useMutation(gql`
             mutation ( $email: String!, $password: String!){
@@ -76,18 +91,21 @@ export default {
             },
             update: (cache, { data }) => {
                 if (!data.tokenAuth.errors){
-                    localStorage.setItem("token", data.tokenAuth.token)                    
-                    redirect()                    
-                   
+                    localStorage.setItem("token", data.tokenAuth.token)
+                    logInUser()      
+                    if (getState.value.status) {
+                        redirectToDashboard()   
+                    }else {
+                        logoutUser()
+                        redirectTologin()
+                    }                                                                       
                 }else {
                     let errors = []
                     for(let e of data.tokenAuth.errors.nonFieldErrors) {
                         errors.push(e)
                     }
                     error.value = errors
-                }  
-                
-                
+                }                                  
             }
         })
         )

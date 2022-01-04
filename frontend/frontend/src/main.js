@@ -17,8 +17,7 @@ const Headers = () => {
     const headers = {}
     const token = window.localStorage.getItem("token")
 
-    if (token) {
-        alert(token)
+    if (token) {        
         headers.authorization = `jwt ${token}`
     }
     return headers
@@ -34,6 +33,7 @@ const apolloClient  = new ApolloClient({
     cache, link:errorlink.concat(link)
 })
 
+export const theClient = apolloClient
 
 createApp({ App, setup() {
     provideApolloClient(apolloClient)

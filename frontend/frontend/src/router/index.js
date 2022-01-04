@@ -1,18 +1,27 @@
 import {createRouter, createWebHistory } from "vue-router"
-import Dashboard from '../views/Dashboard.vue'
-import LoginPage from '../components/LoginPage'
+import Dashboard from '../views/Dashboard/Dashboard.vue'
+import CreateEntries from '../views/Dashboard/CreateEntriesForm.vue'
+import LoginPage from '../views/components/LoginPage.vue'
+import store from '../store'
 
 const routes = [
     {
         path: '/dashboard',
         name: 'Dashboard',
         component: Dashboard,
-        meta: { requiresAuth: true}
+        meta: { requiresAuth: true},
+        children: [
+            {
+                path: 'createEntries',
+                component: CreateEntries,
+
+            },           
+        ]
     },
 
     {
-        path: '/login',
-        redirect: 'Login',
+        path: '/',
+        name: 'Login',
         component: LoginPage,
     }
 ]
@@ -23,13 +32,14 @@ const router = createRouter({
     linkActiveClass: 'active'
 })
 
-/*
-router.beforeEach((to,) => {
+router.beforeEach((to) => {
+
     if(to.meta.requiresAuth && !store.state.authenticated){
-        return {
+        return {            
             name:'Login',
+            query: {redirect: to.fullPath },
         }
     }
-})*/
+})
 
 export default router

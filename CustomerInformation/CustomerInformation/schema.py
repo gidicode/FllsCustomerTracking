@@ -105,21 +105,32 @@ class CreateRidersLog(graphene.Mutation):
         def CreateEntries():
             check_for_contact = Riders_Log.objects.filter(customer_contact = customer_contact).exists()
             if check_for_contact == False:
-                Riders_Log.objects.create(
+                log = Riders_Log.objects.create(
                     customer_name = customer_name,
-                    customer_contact = customer_contact,
-                    Rider = rider, 
+                    customer_contact = customer_contact,                    
                     discount_amount = discount_amount, 
                     date_created = date_created
                 )
+                
+                if rider is not None:
+                    rider_object = Riders.objects.get(pk = rider)
+                log.Rider = rider_object
+                log.save()
+
             else:
-                MultipleEntries.objects.create(
-                    customer = customer_name,
-                    customer_contact = customer_contact,
-                    Rider = rider,
+                multiple_log = MultipleEntries.objects.create(                    
+                    customer_contact = customer_contact,                    
                     discount_amount = discount_amount,
                     date_created = date_created,
                 )
+
+                if rider is not None:
+                    rider_object2 = Riders.objects.get(pk = rider)
+                customer = Riders_Log.objects.get(customer_contact = customer_contact)
+                print(customer)
+                multiple_log.customer = customer
+                multiple_log.Rider = rider_object2
+                multiple_log.save()
 
         return CreateRidersLog(riders_log = CreateEntries())
         

@@ -26,7 +26,7 @@ class Riders_Log(models.Model):
 
 class MultipleEntries(models.Model):
     customer = models.ForeignKey(Riders_Log, on_delete=models.SET_NULL, null=True)
-    customer_contact = models.CharField(validators=[phone_regex], max_length=11, null=True, unique=True )
+    customer_contact = models.CharField(validators=[phone_regex], max_length=11, null=True)
     Rider = models.ForeignKey(Riders, null=True, on_delete= models.SET_NULL)
     discount_amount = models.DecimalField(max_digits=10, blank=True, default=0.00, decimal_places=2)
     date_created = models.DateTimeField(default=timezone.now, null=True)
