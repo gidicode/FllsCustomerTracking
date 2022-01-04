@@ -2,6 +2,7 @@ import graphene
 from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
 from CustomerEntry.models import Riders, Riders_Log, MultipleEntries
+from graphql_auth import mutations
 
 User = get_user_model()
 
@@ -36,6 +37,10 @@ class Query(graphene.ObjectType):
     def resolve_relatedEntries(root, info):
         return MultipleEntries.objects.select_related("customer").all()
 
+
+class AuthMutation(graphene.ObjectType):
+    register = mutations.Register.Field()
+    token_auth = mutations.ObtainJSONWebToken.Field()
 
 ###Mutation
 class AddRiders(graphene.Mutation):
@@ -118,7 +123,7 @@ class CreateRidersLog(graphene.Mutation):
 
         return CreateRidersLog(riders_log = CreateEntries())
         
-class Mutation(graphene.ObjectType):
+class Mutation(AuthMutation, graphene.ObjectType):
     addRiders = AddRiders.Field()
     createUser = CreateUser.Field()
     createRidersLog = CreateRidersLog.Field()

@@ -43,6 +43,8 @@ INSTALLED_APPS = [
 
     'graphene_django',
     "corsheaders",
+    'graphql_jwt.refresh_token.apps.RefreshTokenConfig',
+    "graphql_auth",
 
     'CustomerEntry',
     'users',
@@ -54,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -131,8 +134,29 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 GRAPHENE = {
-    "SCHEMA": "CustomerInformation.schema.schema"
+    "SCHEMA": "CustomerInformation.schema.schema",
+    'MIDDLEWARE': [
+        'graphql_jwt.middleware.JSONWebTokenMiddleware',
+    ],
 }
+
+AUTHENTICATION_BACKENDS = [
+    "graphql_auth.backends.GraphQLAuthBackend",
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+GRAPHQL_JWT = {
+    "JWT_VERIFY_EXPIRATION": True,
+
+    # optional
+    "JWT_LONG_RUNNING_REFRESH_TOKEN": True,
+    "JWT_ALLOW_ANY_CLASSES": [
+        "graphql_auth.mutations.Register",
+        "graphql_auth.mutations.ObtainJSONWebToken",
+    ],
+}
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 CORS_ORIGIN_WHITELIST = ["http://localhost:8080", "http://127.0.0.1:8080"]
 CORS_ALLOW_CREDENTIALS = True
