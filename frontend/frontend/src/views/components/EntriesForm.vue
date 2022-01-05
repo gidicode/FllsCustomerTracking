@@ -53,7 +53,7 @@ export default {
     setup() {
         const schema = yup.object({
             customerName: yup.string(),
-            customerContact: yup.number().required(),
+            customerContact: yup.string().required().matches(/^[0-9]+$/).min(11, "Must be 11 characters").max(11, "Must be 11 characters"),
             Discount: yup.number().integer(),
             selectRider: yup.number().positive().integer(),
         })
@@ -73,7 +73,8 @@ export default {
                     values: {
                         customerName: '',
                         customerContact: '',
-                        Discount: '',
+                        Discount: '0',
+                        selectRider: selectRider.value,
                     }
                 })
             })

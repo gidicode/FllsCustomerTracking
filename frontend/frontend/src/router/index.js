@@ -1,7 +1,9 @@
 import {createRouter, createWebHistory } from "vue-router"
 import Dashboard from '../views/Dashboard/Dashboard.vue'
 import CreateEntries from '../views/Dashboard/CreateEntriesForm.vue'
+import CreateRiders from '../views/Dashboard/CreateRiders.vue'
 import LoginPage from '../views/components/LoginPage.vue'
+
 import store from '../store'
 
 const routes = [
@@ -14,8 +16,14 @@ const routes = [
             {
                 path: 'createEntries',
                 component: CreateEntries,
-
-            },           
+                meta: { requiresAuth: true},
+            }, 
+            
+            {
+                path: 'createRiders',
+                component:CreateRiders,
+                meta: { requiresAuth: true},
+            },
         ]
     },
 

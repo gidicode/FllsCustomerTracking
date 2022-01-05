@@ -25,7 +25,20 @@
                             <div class="p-2 bd-highlight">
                                 <h6 role="button">Records</h6>
                             </div>                            
-                        </div>                                                                                   
+                        </div>   
+
+                        <router-link to="/dashboard/createRiders">
+                            <div class="d-flex flex-row bd-highlight mb-3 background">
+                                <div class="p-2 bd-highlight">
+                                <h6>
+                                    <i class="fas fa-truck"></i>
+                                    </h6>
+                                </div>
+                                <div class="p-2 bd-highlight">
+                                    <h6 role="button">Create Riders</h6>
+                                </div>                            
+                            </div>                                                                                   
+                        </router-link>
                     </section>
                 </div>
                 <div class="col-md-10">
