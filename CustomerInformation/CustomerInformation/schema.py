@@ -4,6 +4,10 @@ from django.contrib.auth import get_user_model
 from CustomerEntry.models import Riders, Riders_Log, MultipleEntries
 from graphql_auth import mutations
 
+from datetime import datetime
+
+today = datetime.now().date()  
+
 User = get_user_model()
 
 class UserType(DjangoObjectType):
@@ -27,6 +31,8 @@ class Query(graphene.ObjectType):
     ridersList = graphene.List(RidersType)
     customerEntries = graphene.List(Riders_LogType)
     relatedEnteries = graphene.List(MultipleEntriesType)
+    entriesTodaySingle = graphene.List(Riders_LogType)
+    entriesTodayMultiple = graphene.List(MultipleEntriesType)
 
     def resolve_ridersList(root, info):
         return Riders.objects.all()
@@ -36,6 +42,12 @@ class Query(graphene.ObjectType):
         
     def resolve_relatedEntries(root, info):
         return MultipleEntries.objects.select_related("customer").all()
+
+    def resolve_entriesTodaySingle(root, info):
+        return Riders_Log.objects.filter( date_created__date = today)
+
+    def resolve_entriesTodayMultiple(root, info):
+        return MultipleEntries.objects.filter(date_created__date = today)
 
 
 class AuthMutation(graphene.ObjectType):

@@ -27,15 +27,16 @@
 import { useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { ref } from '@vue/reactivity'
-import GetRiders from '../../graphql'
-//import riderQuery from '../../graphql'
+import { GetRiders }  from '../../graphql'
+
+
 
 export default {
     name: 'CreateRidersForm',
     setup() {
 
         const riderName = ref('')
-        const riderNumber = ref('')        
+        const riderNumber = ref('')                   
 
         const { mutate: CreateRiders,                 
                 error:ErrorMessage, 
@@ -55,13 +56,25 @@ export default {
                     variables: {
                         riderName: riderName.value,
                         riderNumber: riderNumber.value,
+
                     },
-                    /*update: (cache, { data: { CreateRiders } }) => {
-                        const data  = cache.readQuery({ query: riderQuery })
+                    update: (cache, { data: { addRiders } }) => {
+                         const RIDERCACHE = gql`
+                            query getRider {
+                                ridersList {
+                                    id
+                                    riderName
+                                }
+                            }
+                        `
+                        
+                        const data  = cache.readQuery({ query: RIDERCACHE }) 
+                        console.log(addRiders)                       
                         console.log(data)
-                        data.ridersList.push(CreateRiders)
-                        cache.writeQuery({ query: riderQuery, data})
-                    },*/
+                        data.ridersList.push(addRiders)
+                        cache.writeQuery({ query: RIDERCACHE, data})
+                    },
+                    
                 }))        
 
                 onDone(() => {

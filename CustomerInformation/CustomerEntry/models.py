@@ -10,6 +10,9 @@ class Riders(models.Model):
     rider_name = models.CharField(max_length=50, null=True)
     rider_Number = models.CharField(max_length=10, null=True)
 
+    def __str__(self):
+        return f"{self.rider_name}"
+
 
 class Riders_Log(models.Model):
     customer_name = models.CharField(max_length=50, null=True)

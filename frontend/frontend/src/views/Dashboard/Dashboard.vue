@@ -75,7 +75,7 @@ export default {
     .dashboard-body{
             background-color: rgb(16, 0, 61);        
             height: 620px;
-            overflow: auto;
+            overflow: scroll;
         }
 
     .links{
