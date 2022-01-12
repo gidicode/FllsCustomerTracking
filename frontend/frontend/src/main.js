@@ -23,17 +23,17 @@ const Headers = () => {
     return headers
 }
 
-const cache = new  InMemoryCache()
+const cache = new InMemoryCache()
 const link = createHttpLink({
     uri: 'http://localhost:8000/graphql',
     fetch,
     headers: Headers()
 })
 const apolloClient  = new ApolloClient({   
-    cache, link:errorlink.concat(link)
+    cache, 
+    link:errorlink.concat(link),
+    connectToDevTools: true,
 })
-
-export const theClient = apolloClient
 
 createApp({ App, setup() {
     provideApolloClient(apolloClient)

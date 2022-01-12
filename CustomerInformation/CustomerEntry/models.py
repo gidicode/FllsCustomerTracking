@@ -19,10 +19,11 @@ class Riders_Log(models.Model):
     customer_contact = models.CharField(validators=[phone_regex], max_length=11, null=True, unique=True )
     Rider = models.ForeignKey(Riders, null=True, on_delete= models.SET_NULL)
     discount_amount = models.DecimalField(max_digits=10, blank=True, default=0.00, decimal_places=2)
-    date_created = models.DateTimeField(default=timezone.now, null=True)
+    count = models.ManyToManyField('MultipleEntries', blank=True)
+    date_created = models.DateTimeField(default=timezone.now, null=True)    
 
     def __str__(self):
-        return f"{self.customer_name}"
+        return f"{self.customer_name, self.customer_contact}"
 
     class Meta:
         ordering = ('-date_created',)
@@ -35,7 +36,7 @@ class MultipleEntries(models.Model):
     date_created = models.DateTimeField(default=timezone.now, null=True)
 
     def __str__(self):
-        return f"{self.customer}"
+        return f"{self.customer}" f"{  self.customer_contact}"
     
     class Meta:
         ordering = ('-date_created',)

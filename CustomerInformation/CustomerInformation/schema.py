@@ -129,7 +129,8 @@ class CreateRidersLog(graphene.Mutation):
                 log.Rider = rider_object
                 log.save()
 
-            else:
+            else:      
+               
                 multiple_log = MultipleEntries.objects.create(                    
                     customer_contact = customer_contact,                    
                     discount_amount = discount_amount,
@@ -143,6 +144,9 @@ class CreateRidersLog(graphene.Mutation):
                 multiple_log.customer = customer
                 multiple_log.Rider = rider_object2
                 multiple_log.save()
+                
+                get_the_riders_log = Riders_Log.objects.get(customer_contact = customer_contact)          
+                get_the_riders_log.count.add(multiple_log)
 
         return CreateRidersLog(riders_log = CreateEntries())
         

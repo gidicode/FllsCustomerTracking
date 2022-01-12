@@ -16,13 +16,22 @@
                 <input type="number" class="form-control" id="Discount" v-model= "Discount">
                 <span class="error-text">{{ DiscountError }}</span>
             </div>
+
+            <div>
+                <label for="Date" class="form-label"> Date</label>
+                <input id="Date" type="date" class="form-control" v-model= "dateCreated">
+                <span class="error-text">{{ dateCreatedError }}</span>                
+            </div>
             
-            <select class="form-select" aria-label="Default select example" v-model= "selectRider">
-                <option selected disabled>Open this select menu</option>
-                <option v-for="riders in Riders" :key="riders.id" :value="riders.id">
-                    {{ riders.riderName }} {{ riders.riderNumber}}
-                </option>               
-            </select>
+            <div class="mt-3">
+                <label for="Select Rider" class="form-label"> Select Rider</label>
+                <select class="form-select" aria-label="Select Rider" id="Select Rider" v-model= "selectRider">
+                    <option selected disabled>Open this select menu</option>
+                    <option v-for="riders in Riders" :key="riders.id" :value="riders.id">
+                        {{ riders.riderName }} {{ riders.riderNumber}}
+                    </option>               
+                </select>
+            </div>
             <span class="error-text">{{ selectRiderError }}</span>
             
             <button class="btn btn-primary mt-4" type="button" disabled v-if="loading">
@@ -55,10 +64,11 @@ export default {
             customerName: yup.string(),
             customerContact: yup.string().required().matches(/^[0-9]+$/).min(11, "Must be 11 characters").max(11, "Must be 11 characters"),
             Discount: yup.number().integer(),
+            dateCreated: yup.date(),
             selectRider: yup.number().positive().integer(),
         })
         
-        useForm({
+        useForm({ 
             validationSchema: schema,
         })
 
@@ -74,6 +84,7 @@ export default {
                         customerName: '',
                         customerContact: '',
                         Discount: '0',
+                        dateCreated: dateCreated.value,
                         selectRider: selectRider.value,
                     }
                 })
@@ -82,6 +93,7 @@ export default {
 
         const { value: customerName, errorMessage: customerNameError } = useField('customerName')
         const { value: customerContact, errorMessage: customerContactError} = useField('customerContact')
+        const { value: dateCreated, errorMessage: dateCreatedError } = useField('dateCreated')
         const { value: Discount, errorMessage: DiscountError } = useField('Discount')
         const { value: selectRider, errorMessage: selectRiderError } = useField('selectRider')        
 
@@ -123,15 +135,17 @@ export default {
                         customerContact: customerContact.value,
                         rider: selectRider.value,
                         discountAmount: Discount.value,
-                        dateCreated: new Date()
-                    }
+                        dateCreated: new Date(dateCreated.value)
+                    },                                           
                 })
-            )
+            )        
+
          return {
             customerNameError,
             customerContactError,
             DiscountError,
             selectRiderError,
+            dateCreatedError,
             onSubmit,
             ErrorMessage,
             loading,
@@ -140,6 +154,7 @@ export default {
             customerContact,
             Discount,
             selectRider,
+            dateCreated
         }  
     },   
 }

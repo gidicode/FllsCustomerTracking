@@ -18,7 +18,7 @@
             
         </form>        
         <div class="submitError" v-if="ErrorMessage">
-            <h6 class="text-danger">an Error occured</h6>                            
+            <h6 class="text-danger">an Error occured {{ ErrorMessage }}</h6>                            
         </div>          
     </div>
 </template>
@@ -27,9 +27,7 @@
 import { useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { ref } from '@vue/reactivity'
-import { GetRiders }  from '../../graphql'
-
-
+import { GETRIDER }  from '../../graphql'
 
 export default {
     name: 'CreateRidersForm',
@@ -56,25 +54,14 @@ export default {
                     variables: {
                         riderName: riderName.value,
                         riderNumber: riderNumber.value,
-
-                    },
-                    update: (cache, { data: { addRiders } }) => {
-                         const RIDERCACHE = gql`
-                            query getRider {
-                                ridersList {
-                                    id
-                                    riderName
-                                }
-                            }
-                        `
-                        
-                        const data  = cache.readQuery({ query: RIDERCACHE }) 
-                        console.log(addRiders)                       
-                        console.log(data)
-                        data.ridersList.push(addRiders)
-                        cache.writeQuery({ query: RIDERCACHE, data})
-                    },
-                    
+                    },                    
+                    update: (cache, { data: { createDailyEntries } }) => {
+                        const data = cache.read({ query: GETRIDER})
+                        //const data = cache.readQuery({ query: GETRIDER})
+                        //data.ridersList.push(createDailyEntries)
+                        console.log(data, createDailyEntries)
+                        //cache.writeQuery({ query: GETRIDER, data})
+                    },                   
                 }))        
 
                 onDone(() => {
@@ -82,8 +69,7 @@ export default {
                     riderNumber.value = ''
                     })
 
-            return {
-                GetRiders,
+            return {                
                 CreateRiders,                
                 ErrorMessage,
                 loadding,
