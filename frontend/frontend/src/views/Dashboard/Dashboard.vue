@@ -113,8 +113,8 @@ export default {
         height: autox;                
     }
 
-    .the-body{
-        height: auto;
+    .the-body {
+        height: 550px;
         overflow: scroll;       
     }
 

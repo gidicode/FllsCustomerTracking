@@ -4,6 +4,7 @@ import CreateEntries from '../views/Dashboard/CreateEntriesForm.vue'
 import CreateRiders from '../views/Dashboard/CreateRiders.vue'
 import LoginPage from '../views/components/LoginPage.vue'
 import Record from '../views/Dashboard/Records.vue'
+import RecordDetails from '../views/components/Records/RecordsDetails.vue'
 import store from '../store'
 
 const routes = [
@@ -12,6 +13,7 @@ const routes = [
         name: 'Dashboard',
         component: Dashboard,
         meta: { requiresAuth: true},
+        props: true,
         children: [
             {
                 path: 'createEntries',
@@ -28,8 +30,18 @@ const routes = [
             {
                 path: 'records',
                 component: Record,
-                meta: { requiresAuth: true }
-            },
+                meta: { requiresAuth: true },
+                props: true,
+                children: [
+                    {
+                        path: 'recordDetails/:id',
+                        name: 'RecordDetails',
+                        component: RecordDetails,
+                        props: true,
+                        meta: { requiresAuth: true }
+                    },
+                ]
+            },            
         
         ]
     },

@@ -36,7 +36,7 @@ class MultipleEntries(models.Model):
     date_created = models.DateTimeField(default=timezone.now, null=True)
 
     def __str__(self):
-        return f"{self.customer}" f"{  self.customer_contact}"
+        return f"{self.customer}" f"{  self.customer_contact}" + " " f"{self.date_created}"
     
     class Meta:
         ordering = ('-date_created',)
