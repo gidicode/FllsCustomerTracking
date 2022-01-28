@@ -21,7 +21,6 @@ export default {
     },   
 
     setup() {
-
         const uniqueCustomers = computed(() => RecordQueryUnique.value)
         const multipleCustomers = computed(() => RecordQueryMultiple.value)        
         

@@ -40,15 +40,14 @@ class Query(graphene.ObjectType):
     def resolve_customerEntries(root, info):
         return Riders_Log.objects.all()
         
-    def resolve_relatedEntries(root, info):
-        return MultipleEntries.objects.select_related("customer").all()
+    def resolve_relatedEnteries(root, info):
+        return MultipleEntries.objects.select_related("customer").all()    
 
     def resolve_entriesTodaySingle(root, info):
         return Riders_Log.objects.filter( date_created__date = today)
 
     def resolve_entriesTodayMultiple(root, info):
         return MultipleEntries.objects.filter(date_created__date = today)
-
 
 class AuthMutation(graphene.ObjectType):
     register = mutations.Register.Field()

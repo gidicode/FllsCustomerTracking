@@ -35,9 +35,12 @@ const routes = [
                 children: [
                     {
                         path: 'recordDetails/:id',
-                        name: 'RecordDetails',
-                        component: RecordDetails,
-                        props: true,
+                        name: 'RecordDetails',                        
+                        component: RecordDetails,                        
+                        props: (route) => {
+                            console.log(route)
+                            return { ...route.params }
+                        },
                         meta: { requiresAuth: true }
                     },
                 ]

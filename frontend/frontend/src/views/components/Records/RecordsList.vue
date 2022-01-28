@@ -1,11 +1,39 @@
-<template>
+ <template>
     <div class="row">
     <div class="col-md-8">
         <div class="theBack">        
-            <ul v-for="i in multipleCustomers" :key="i.id">           
-                    <li>{{ i.customer.customerName}}</li>           
-            </ul>
-            <table class="table">
+           <section class="sticky-top shadow-sm">
+                <div class="d-flex flex-row bd-highlight text-white justify-content-between">
+                    <div class="p-2 bd-highlight ">                                               
+                        <p class="lh-1">
+                            Customer Records 
+                            <br>
+                            <span><small>(Unique names)</small></span>    
+                        </p>                         
+                    </div>
+
+                    <div class="p-2 bd-highlight">   
+                         <p class="lh-1">
+                            <strong> Unique:</strong> <br> {{ searchedCustomers.length }}
+                        </p>                                                                         
+                    </div>
+
+                    <div class="p-2 bd-highlight">                                               
+                        <p class="lh-1" >
+                            <strong>Total:</strong> <br> {{ allEntries }}
+                        </p>    
+                    </div>
+
+                    <div class="p-2 bd-highlight w-10">                       
+                        <div class="input-group">
+                            <span class="input-group-text icon" id="basic-addon1"><i class="fas fa-search text-white"></i></span>                     
+                            <input type="text" v-model="searchName" class="form-control" placeholder="Search..." aria-describedby="basic-addon1"/>
+                        </div>                                              
+                    </div>
+                </div>               
+
+           </section>
+            <table class="table mt-3">
                 <thead>
                     <tr>    
                         <th scope="col">S/N</th>        
@@ -14,12 +42,12 @@
                         <th scope="col">Onboard</th>
                         <th scope="col">Count</th>
                         <th scope="col">Last Used</th>
-                        </tr>
+                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="(i, index) in uniqueCustomers" :key="i.id">                                        
+                    <tr v-for="(i, index) in searchedCustomers" :key="i.id">
                         <td>{{ index + 1 }}</td>
-                        <td>
+                        <td @click= "changeStateOnce">
                             <router-link :to ="{name: 'RecordDetails',
                                 params: {
                                     id:i.id,
@@ -27,9 +55,8 @@
                                     customerContact: i.customerContact,
                                     lastUse: i.count.length + 1 ,
                                     firstRider: i.Rider.riderName,
-                                    discount: i.discountAmount,
-                                    listDelivery: JSON.stringify(i.count)
-                                }
+                                    discount: i.discountAmount,                                     
+                                }                                
                             }"
                             >
                                 {{ i.customerName }}
@@ -52,8 +79,13 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="sticky-top">
-             <RecordDetails/>          
+        <div class="sticky-top" v-if="hidePage"                                                     >
+             <RecordDetails
+            :uniqueCustomers= "uniqueCustomers"
+            :dateTime = "dateTime"
+            :dateRange = "dateRange"
+            @closeDetails = 'changeState'
+             />
         </div>
     </div>
     </div>
@@ -63,6 +95,7 @@
 <script>
 import moment from 'moment'
 import  RecordDetails from '../Records/RecordsDetails.vue'
+import { computed, ref, toRef } from '@vue/reactivity'
 
 export default {
     name: "recordList",
@@ -72,13 +105,38 @@ export default {
     },
 
     props: {
-        uniqueCustomers: Array,
-        multipleCustomers: Array
+        uniqueCustomers: Object,
+        multipleCustomers: Object
     },
-    setup() {
-       
+ 
+    setup(props) {        
+        const allCustomers = toRef(props, 'uniqueCustomers')        
+        const multipleEntries = toRef(props, 'multipleCustomers')
+
+        const searchName = ref('')        
+        const hidePage = ref(false)        
+        const changeState = () => hidePage.value = !hidePage.value
+        const changeStateOnce = () => hidePage.value = true
+
+        const allEntries = computed(() => allCustomers.value.length + multipleEntries.value.length)
+
+        console.log(allEntries.value)
+        
+        const searchedCustomers = computed(() => {
+            return allCustomers.value.filter((allCustomer) => {
+                return (
+                    allCustomer.customerName
+                    .toLowerCase()
+                    .indexOf(searchName.value.toLowerCase()) != -1 ||
+                    allCustomer.customerContact
+                    .toLowerCase()
+                    .indexOf(searchName.value.toLowerCase()) != -1
+                )
+            })
+        })
+
         function dateTime(value) {
-            return moment(value).format('YYYY-MM-DD')
+            return moment(value).format('DD-MM-YYYY')
         }
 
         function dateRange(value) {
@@ -88,7 +146,13 @@ export default {
         return{
             dateTime,
             dateRange,
-            RecordDetails
+            RecordDetails,
+            searchName,
+            searchedCustomers,  
+            hidePage,          
+            changeState,
+            changeStateOnce,
+            allEntries
         }
     },
 }
@@ -100,4 +164,27 @@ export default {
     padding: 15px;
     border-radius: 10px;
 }
+
+a {
+    text-decoration: none;
+}
+
+ a.router-link-exact-active {    
+    color: rgb(37, 73, 190);
+    
+    font-weight: bold;       
+    text-align: center;
+}
+
+section{
+    background-color: #517fbb;
+    border-radius: 20px;
+    padding: 10px;
+    height: 4.6rem;
+}
+
+.icon{
+    background-color: #6e9fdf;
+}
+
 </style>

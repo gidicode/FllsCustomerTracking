@@ -84,11 +84,13 @@ const { result: RecordList } = useQuery(gql`
             count {
                 id
                 customerContact
-                customer {
+                dateCreated                
+                discountAmount
+                Rider{
                     id
-                    customerName                    
+                    riderName
+                    riderNumber
                 }
-                dateCreated
             }
             discountAmount
             dateCreated

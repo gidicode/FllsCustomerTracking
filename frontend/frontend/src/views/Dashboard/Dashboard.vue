@@ -43,12 +43,7 @@
                         </router-link>
                     </section>
                 </div>
-                <div class="col-md-10">
-                    <section class="top p-3">
-                        <a href="" role="button" class="btn btn-primary btn-sm">
-                            Notifications <span class="badge badge-light">0</span>
-                        </a>
-                    </section>
+                <div class="col-md-10">                    
                     <section class="the-body mt-3">
                         <div class="container">                            
                             <router-view/>
