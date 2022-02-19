@@ -41,6 +41,19 @@
                                 </div>                            
                             </div>                                                                                   
                         </router-link>
+
+                        <router-link to="/dashboard/Riders">
+                            <div class="d-flex flex-row bd-highlight mb-3 background">
+                                <div class="p-2 bd-highlight">
+                                <h6>
+                                    <i class="fas fa-truck"></i>
+                                    </h6>
+                                </div>
+                                <div class="p-2 bd-highlight">
+                                    <h6 role="button">Riders</h6>
+                                </div>                            
+                            </div>                                                                                   
+                        </router-link>
                     </section>
                 </div>
                 <div class="col-md-10">                    
@@ -56,13 +69,8 @@
 </template>
 
 <script>
-
-
 export default {
     name: "Dashboard",
-
-    setup() {               
-    },
 }
 
 </script>
@@ -113,8 +121,9 @@ export default {
         overflow: scroll;       
     }
 
-    .a {
+    a {
         text-decoration: none;
+        color: white;
     }
 
     /*Working on the scroll bar*/

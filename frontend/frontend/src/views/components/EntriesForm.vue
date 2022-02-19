@@ -29,7 +29,7 @@
                     <option selected disabled>Open this select menu</option>
                     <option v-for="riders in Riders" :key="riders.id" :value="riders.id">
                         {{ riders.riderName }} {{ riders.riderNumber}}
-                    </option>               
+                    </option>
                 </select>
             </div>
             <span class="error-text">{{ selectRiderError }}</span>

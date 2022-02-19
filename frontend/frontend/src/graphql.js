@@ -70,7 +70,7 @@ export const ENTRIES = gql`
     }
 `
 
-const { result: RecordList } = useQuery(gql`
+const { result: RecordList, loading } = useQuery(gql`
     query customerEntries {
         customerEntries {
             id
@@ -104,9 +104,13 @@ const { result: RecordList } = useQuery(gql`
                 customerName
                 customerContact
             }
+            Rider {
+                id
+                riderName
+            }
             customerContact
             discountAmount
-            dateCreated
+            dateCreated            
         }
     }
 `)
@@ -117,3 +121,4 @@ export const singleEntriesToday = useResult( EntriesToday, [], data => data.entr
 export const multipleEntriesToday = useResult( EntriesToday, [], data => data.entriesTodayMultiple)
 export const RecordQueryUnique = useResult( RecordList, [], data => data.customerEntries)
 export const RecordQueryMultiple = useResult( RecordList, [], data => data.relatedEnteries)
+export const load = loading

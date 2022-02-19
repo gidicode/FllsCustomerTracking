@@ -25,8 +25,7 @@ export default {
     components: { EntriesToday, EntriesForm },
 
     setup() {
-         const AllRiders = computed(() => GetRiders.value)         
-         console.log(AllRiders.value)
+         const AllRiders = computed(() => GetRiders.value)                           
 
           return {
             AllRiders,

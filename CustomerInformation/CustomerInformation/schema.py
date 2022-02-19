@@ -34,7 +34,7 @@ class Query(graphene.ObjectType):
     entriesTodaySingle = graphene.List(Riders_LogType)
     entriesTodayMultiple = graphene.List(MultipleEntriesType)
 
-    def resolve_ridersList(root, info):
+    def resolve_ridersList(root, info):        
         return Riders.objects.all()
 
     def resolve_customerEntries(root, info):
@@ -138,8 +138,7 @@ class CreateRidersLog(graphene.Mutation):
 
                 if rider is not None:
                     rider_object2 = Riders.objects.get(pk = rider)
-                customer = Riders_Log.objects.get(customer_contact = customer_contact)
-                print(customer)
+                customer = Riders_Log.objects.get(customer_contact = customer_contact)                
                 multiple_log.customer = customer
                 multiple_log.Rider = rider_object2
                 multiple_log.save()
@@ -148,10 +147,36 @@ class CreateRidersLog(graphene.Mutation):
                 get_the_riders_log.count.add(multiple_log)
 
         return CreateRidersLog(riders_log = CreateEntries())
+
+
+class EditRidersLog(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID()
+        customerName = graphene.String()
+        customerContact = graphene.String()
+        rider = graphene.Int(name='rider')
+        dateCreated = graphene.types.DateTime()
+
+    edit_log = graphene.Field(Riders_LogType)
+
+    @classmethod
+    def mutate(root, info, id, customerName, customerContact, rider, dateCreated):
+        edit_log = Riders_Log.objects.get(id = id)
+        edit_log.customer_name = customerName
+        edit_log.customer_contact = customerContact
+        
+        if rider is not None:
+            rider_object = Riders.objects.get(pk = rider)
+        edit_log.rider = rider_object
+        edit_log.date_created = dateCreated
+        edit_log.save()
+
+        return EditRidersLog( edit_log = edit_log )
         
 class Mutation(AuthMutation, graphene.ObjectType):
     addRiders = AddRiders.Field()
     createUser = CreateUser.Field()
     createRidersLog = CreateRidersLog.Field()
+    editRidersLog = EditRidersLog.Field()
 
 schema = graphene.Schema(query=Query, mutation = Mutation)

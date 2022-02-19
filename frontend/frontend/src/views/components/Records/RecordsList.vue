@@ -1,100 +1,123 @@
  <template>
-    <div class="row">
-    <div class="col-md-8">
-        <div class="theBack">        
-           <section class="sticky-top shadow-sm">
-                <div class="d-flex flex-row bd-highlight text-white justify-content-between">
-                    <div class="p-2 bd-highlight ">                                               
-                        <p class="lh-1">
-                            Customer Records 
-                            <br>
-                            <span><small>(Unique names)</small></span>    
-                        </p>                         
-                    </div>
+    <div>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="theBack">        
+                <section class="sticky-top shadow-sm the-section" v-if="HideSection">
+                        <div class="d-flex flex-row bd-highlight text-white justify-content-between">
+                            <div class="p-2 bd-highlight ">                                               
+                                <p class="lh-1">
+                                    Customer Records 
+                                    <br>
+                                    <span><small>(Unique names)</small></span>    
+                                </p>                         
+                            </div>
 
-                    <div class="p-2 bd-highlight">   
-                         <p class="lh-1">
-                            <strong> Unique:</strong> <br> {{ searchedCustomers.length }}
-                        </p>                                                                         
-                    </div>
+                            <div class="p-2 bd-highlight">   
+                                <p class="lh-1">
+                                    <strong> Unique:</strong> <br> {{ searchedCustomers.length }}
+                                </p>                                                                         
+                            </div>
 
-                    <div class="p-2 bd-highlight">                                               
-                        <p class="lh-1" >
-                            <strong>Total:</strong> <br> {{ allEntries }}
-                        </p>    
-                    </div>
+                            <div class="p-2 bd-highlight">                                               
+                                <p class="lh-1" >
+                                    <strong>Total:</strong> <br> {{ allEntries }}
+                                </p>    
+                            </div>
 
-                    <div class="p-2 bd-highlight w-10">                       
-                        <div class="input-group">
-                            <span class="input-group-text icon" id="basic-addon1"><i class="fas fa-search text-white"></i></span>                     
-                            <input type="text" v-model="searchName" class="form-control" placeholder="Search..." aria-describedby="basic-addon1"/>
-                        </div>                                              
-                    </div>
-                </div>               
+                            <div class="p-2 bd-highlight w-10">                       
+                                <div class="input-group">
+                                    <span class="input-group-text icon" id="basic-addon1"><i class="fas fa-search text-white"></i></span>                     
+                                    <input type="text" v-model="searchName" class="form-control" placeholder="Search..." aria-describedby="basic-addon1"/>
+                                    <span class="clear" @click="clearSearch()"><i class="fas fa-times"></i></span>
+                                </div>                                              
+                            </div>
+                        </div>               
 
-           </section>
-            <table class="table mt-3">
-                <thead>
-                    <tr>    
-                        <th scope="col">S/N</th>        
-                        <th scope="col">Customer Name</th>
-                        <th scope="col">Phone Number</th>
-                        <th scope="col">Onboard</th>
-                        <th scope="col">Count</th>
-                        <th scope="col">Last Used</th>
-                     </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(i, index) in searchedCustomers" :key="i.id">
-                        <td>{{ index + 1 }}</td>
-                        <td @click= "changeStateOnce">
-                            <router-link :to ="{name: 'RecordDetails',
-                                params: {
-                                    id:i.id,
-                                    customerName: i.customerName,
-                                    customerContact: i.customerContact,
-                                    lastUse: i.count.length + 1 ,
-                                    firstRider: i.Rider.riderName,
-                                    discount: i.discountAmount,                                     
-                                }                                
-                            }"
-                            >
-                                {{ i.customerName }}
-                            </router-link>
-                        </td>                        
-                        <td>{{ i.customerContact }}</td>
-                        <td> {{dateTime( i.dateCreated ) }} </td>
-                        <td>{{ i.count.length + 1 }} </td>
-                        <td v-if="i.count == '' "> 
-                                {{ dateRange(i.dateCreated) }}                                          
-                        </td>     
-                        <td v-else>
-                                <div  v-for="items in i.count.slice(0, 1)" :key="items.id">
-                                {{ dateRange(items.dateCreated) }}
-                            </div>  
-                        </td>                                       
-                    </tr>            
-                </tbody>
-            </table>             
+                </section>
+                    <table class="table table-sm mt-3">
+                        <thead>
+                            <tr>    
+                                <th scope="col">S/N</th>        
+                                <th scope="col">Name</th>
+                                <th scope="col">Number</th>
+                                <th scope="col">Onboard</th>
+                                <th scope="col">Count</th>
+                                <th scope="col">Last Used</th>                        
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(i, index) in searchedCustomers" :key="i.id">
+                                <td>{{ index + 1 }}</td>
+                                <td @click= "changeStateOnce">
+                                    <router-link :to ="{name: 'RecordDetails',
+                                        params: {
+                                            id:i.id,
+                                            customerName: i.customerName,
+                                            customerContact: i.customerContact,
+                                            lastUse: i.count.length + 1 ,
+                                            firstRider: i.Rider.riderName,
+                                            discount: i.discountAmount,   
+                                            dateCreated: i.dateCreated                                  
+                                        }                                
+                                    }"
+                                    >
+                                        {{ i.customerName }}
+                                    </router-link>
+                                </td>                        
+                                <td>{{ i.customerContact }}</td>
+                                <td> {{dateTime( i.dateCreated ) }} </td>
+                                <td>{{ i.count.length + 1 }} </td>
+                                <td v-if="i.count == '' "> 
+                                        {{ dateRange(i.dateCreated) }}                                          
+                                </td>     
+                                <td v-else>
+                                        <div  v-for="items in i.count.slice(0, 1)" :key="items.id">
+                                        {{ dateRange(items.dateCreated) }}
+                                    </div>  
+                                </td>                                                               
+                            </tr>            
+                        </tbody>
+                    </table>             
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="sticky-top" v-if="hidePage"                                                     >
+                    <RecordDetails
+                    :uniqueCustomers= "uniqueCustomers"
+                    :dateTime = "dateTime"
+                    :dateRange = "dateRange"
+                    @closeDetails = 'changeState'
+                    @showEditModal = 'showEditModal'
+                    @showSection = 'showSectionOnce'
+                    @showSms = 'showSms'
+                    />                                 
+                </div>
+
+            </div>    
+        </div>  
+        <div class="back-drop" v-if="hideEditModal">
+            <EditRecords 
+                :uniqueCustomers = 'uniqueCustomers'
+                @showEditModal = 'showEditModal'                
+                @showSection = 'showSection'
+            />
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="sticky-top" v-if="hidePage"                                                     >
-             <RecordDetails
-            :uniqueCustomers= "uniqueCustomers"
-            :dateTime = "dateTime"
-            :dateRange = "dateRange"
-            @closeDetails = 'changeState'
-             />
+
+        <div class="back-drop" v-if="hideSms">
+            <SingleSms
+                @showEditModal = 'showSms'
+            />
         </div>
+        
     </div>
-    </div>
-   
 </template>
 
 <script>
 import moment from 'moment'
 import  RecordDetails from '../Records/RecordsDetails.vue'
+import  EditRecords from '../Records/EditRecords.vue'
+import SingleSms from '../SingleSms.vue'
 import { computed, ref, toRef } from '@vue/reactivity'
 
 export default {
@@ -102,6 +125,8 @@ export default {
 
     components: {
         RecordDetails,
+        EditRecords,
+        SingleSms
     },
 
     props: {
@@ -113,15 +138,23 @@ export default {
         const allCustomers = toRef(props, 'uniqueCustomers')        
         const multipleEntries = toRef(props, 'multipleCustomers')
 
-        const searchName = ref('')        
+        const searchName = ref('')
         const hidePage = ref(false)        
         const changeState = () => hidePage.value = !hidePage.value
         const changeStateOnce = () => hidePage.value = true
 
-        const allEntries = computed(() => allCustomers.value.length + multipleEntries.value.length)
+        const hideEditModal = ref(false)
+        const showEditModal = ()=> hideEditModal.value = !hideEditModal.value
 
-        console.log(allEntries.value)
+        const HideSection = ref(true)
+        const showSection = () => HideSection.value = !HideSection.value
         
+        const showSectionOnce = () => HideSection.value = false
+
+        const hideSms = ref(false)
+        const showSms= () => hideSms.value = !hideSms.value
+
+        const allEntries = computed(() => allCustomers.value.length + multipleEntries.value.length)                
         const searchedCustomers = computed(() => {
             return allCustomers.value.filter((allCustomer) => {
                 return (
@@ -134,6 +167,9 @@ export default {
                 )
             })
         })
+        const clearSearch = () => {
+            searchName.value = ''
+        }
 
         function dateTime(value) {
             return moment(value).format('DD-MM-YYYY')
@@ -141,18 +177,28 @@ export default {
 
         function dateRange(value) {
             return moment(value).fromNow()
-        }        
+        }                
         
         return{
             dateTime,
             dateRange,
             RecordDetails,
+            EditRecords,
+            SingleSms,
             searchName,
             searchedCustomers,  
             hidePage,          
             changeState,
             changeStateOnce,
-            allEntries
+            allEntries,
+            clearSearch,
+            hideEditModal,
+            showEditModal,
+            showSection,
+            HideSection,
+            hideSms,
+            showSms,
+            showSectionOnce
         }
     },
 }
@@ -160,7 +206,7 @@ export default {
 
 <style scoped>
 .theBack {
-    background-color: #F8FBFF;
+    background-color: #ffffff;
     padding: 15px;
     border-radius: 10px;
 }
@@ -176,7 +222,7 @@ a {
     text-align: center;
 }
 
-section{
+.the-section{
     background-color: #517fbb;
     border-radius: 20px;
     padding: 10px;
@@ -185,6 +231,26 @@ section{
 
 .icon{
     background-color: #6e9fdf;
+}
+
+.clear {
+    position: relative;
+    right: 20px;
+    color: darkblue;
+    margin-top: 8px;
+    z-index: 4;    
+}
+
+.back-drop{      
+    padding: 28px;    
+    top: 0px;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    right: 0px;
+    left: 0px;
+    bottom: 0px;
+    background: rgba(0, 0, 0, 0.5);        
 }
 
 </style>

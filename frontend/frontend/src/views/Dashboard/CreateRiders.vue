@@ -12,9 +12,6 @@ export default {
     name: 'CreateRiders',
     components : {
         CreateRidersForm,
-    },
-    setup() {
-        
-    },
+    },    
 }
 </script>

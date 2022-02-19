@@ -2,7 +2,11 @@ import {createRouter, createWebHistory } from "vue-router"
 import Dashboard from '../views/Dashboard/Dashboard.vue'
 import CreateEntries from '../views/Dashboard/CreateEntriesForm.vue'
 import CreateRiders from '../views/Dashboard/CreateRiders.vue'
+import Riders from '../views/Dashboard/Riders.vue'
 import LoginPage from '../views/components/LoginPage.vue'
+import SingleSms from '../views/components/SingleSms.vue'
+import RidersDetails from '../views/components/RidersDetails.vue'
+import EditRecords from '../views/components/Records/EditRecords.vue'
 import Record from '../views/Dashboard/Records.vue'
 import RecordDetails from '../views/components/Records/RecordsDetails.vue'
 import store from '../store'
@@ -37,14 +41,45 @@ const routes = [
                         path: 'recordDetails/:id',
                         name: 'RecordDetails',                        
                         component: RecordDetails,                        
-                        props: (route) => {
-                            console.log(route)
+                        props: (route) => {                            
                             return { ...route.params }
                         },
                         meta: { requiresAuth: true }
                     },
+
+                    {
+                        path: 'editRecord/:id',
+                        name: 'EditRecord',
+                        component: EditRecords,                       
+                        meta: { requiresAuth: true }
+                    },
+
+                    {
+                        path: 'singleSms/:id',
+                        name: 'SingleSms',
+                        component: SingleSms,
+                        meta: { requiresAuth: true},
+                    }
                 ]
             },            
+
+            {
+                path: 'Riders',
+                name: 'Riders',
+                component: Riders,
+                meta: { requiresAuth: true },
+                children: [
+                    {
+                        path: 'RidersDetails/:name',
+                        name: 'RidersDetails',
+                        component: RidersDetails,
+                        props: (route) => {                            
+                            return { ...route.params }
+                        },
+                        meta: { requiresAuth: true }
+                    }
+                ],
+            }
         
         ]
     },
