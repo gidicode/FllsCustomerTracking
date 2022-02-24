@@ -4,38 +4,49 @@
 
         <div class="form-background">
             <p class="text-primary">Send SMS to this customer</p>
-            <form @submit.prevent="editEntries()">               
+            <form @submit.prevent="onSubmit()">                               
                 <div class="mb-3">
                     <label for="customerContact" class="form-label">Customer Phone</label>
-                    <input type="text" class="form-control" id="customerContact" v-model= "customerNumber">
+                    <input type="text" class="form-control" id="customerContact" disabled v-model= "customerNumber">
                     <span class="error-text"></span>
                 </div>                
 
                 <div>
                     <label for="smsBody" class="form-label"> Message Body</label>                    
-                    <textarea name="smsBody" class="form-control" id="smsBody" cols="30" rows="10"></textarea>
-                    <span class="error-text"></span>                
-                </div>               
-                
+                    <textarea name="smsBody" class="form-control" id="smsBody" v-model="Message" cols="30" rows="10"></textarea>
+                    <span class="error-text"></span> 
+                </div>
+
                 <button class="btn btn-primary mt-4" type="button" disabled v-if="loading">
                     <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
                     Sending...
                 </button>  
+
                 <button type="submit" class="btn btn-primary mt-4" v-else>Send</button>
-                
-            </form>      
-        
-            <div class="submitError" v-if="ErrorMessage">
-                <h6 class="text-danger">an Error occured</h6>                            
-            </div> 
+
+                <div class="success" v-if="success">
+                    <p class="text-success">Sent Successfully</p> <font-awesome-icon icon="fa-solid fa-circle-check" />
+                </div>
+
+                <div class="error" v-if="smsError">
+                    <p class="text-danger">An error occured</p> <font-awesome-icon icon="fa-solid fa-circle-check" />
+                </div>
+
+                <div class="submitError" v-if="MessageError">
+                    <h6 class="text-danger"> Error ccured</h6>                            
+                    {{ MessageError }}
+                </div>                 
+            </form>                  
         </div>
     </div>
 
 </template>
 
 <script>
-import { computed } from '@vue/reactivity'
+import { computed, ref} from '@vue/reactivity'
 import { useRoute } from 'vue-router'
+import { useField, useForm } from 'vee-validate'
+import * as yup from 'yup'
 
 export default {
     name: 'SingleSms',
@@ -43,15 +54,87 @@ export default {
 
     setup(props, context) {
         const route = useRoute()
-        const customerNumber = computed(() => route.params.customerContact)
-
+        const customerNumber = computed(() => route.params.customerContact)        
+        const schema = yup.object({
+            Message: yup.string().required().max(200, 'Exceed message space'),
+        })          
+        useForm({
+            validationSchema: schema,
+        })
+        const { handleSubmit } = useForm({
+            validationSchema: schema,
+        })            
+        const { value: Message, errorMessage: MessageError } = useField('Message')        
+        
         const sendEditModal = () => {
             context.emit('showEditModal')
         }
+                             
+        const GettingResult = ref('')
+
+        const loading = ref(false)
+        const success = ref(false)        
+        const smsError = ref(false)
+
+        const changeLoadingState = () => loading.value = !loading.value
+        const changeSuccessState = () => success.value = !success.value
+        const changeSmsErrorState = () => smsError.value = !smsError.value
+                 
+        const onSubmit = handleSubmit(() => {                  
+            changeLoadingState()
+
+            const url = 'https://app.multitexter.com/v2/app/sendsms'
+            const raw = {
+                "sender_name" : "FLLS",
+                "message": ref(Message.value),
+                "recipients": customerNumber.value,
+            }  
+            //raw.message = Message.value
+
+            const requestOptions = {
+            method: 'POST',
+            body: JSON.stringify(raw),
+            redirect: 'follow',
+            headers: {
+                'Authorization': 'Bearer E9jriOUBg5ssOLSAc6DzE94O9cjxQ5kB6iW7DEv6mEADXs5Q2QcPXgOS0AVL',
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',                            
+                },
+            };                      
+
+            fetch(url, requestOptions)
+            .then(response => response.text())
+            .then(result => {
+                console.log(result)
+                console.log(loading.value)
+                GettingResult.value = JSON.parse(result)   
+
+                console.log(GettingResult.value)
+                console.log('message', raw.message.value)
+                changeLoadingState()
+
+                if (GettingResult.value.status !== 1 ) {                    
+                    changeSmsErrorState()
+                } else if (GettingResult.value.status === 1) {
+                    changeSuccessState()
+                }
+            }) 
+            .catch(error => {
+                if (error) {
+                    alert('An error occured')
+                }
+            });
+        })        
 
         return {
             sendEditModal,
-            customerNumber
+            customerNumber,  
+            onSubmit,         
+            Message,
+            MessageError,
+            loading,
+            success,
+            smsError
         }
     },
 }

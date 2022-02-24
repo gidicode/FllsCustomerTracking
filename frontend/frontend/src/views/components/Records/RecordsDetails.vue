@@ -20,6 +20,7 @@
                                 customerContact: CustomerContact,
                                 dateCreated: DateCreated,
                                 rider: rider,
+                                riderId: riderId,
                                 }}"> 
                                 <i class="far fa-edit "></i> Edit 
                             </router-link>
@@ -36,12 +37,18 @@
                         </button>
                     </div>
                     <div class=" bd-highlight">
-                        <button class="action-button btn text-white" type="button">
-                            <i class="fas fa-trash-alt"></i> Delete
-                        </button>
+                        <button class="btn action-button text-white" type="button" disabled v-if="loading">
+                            <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+                            Deleting...
+                        </button>  
+                        <button type="submit" class="btn action-button text-white" v-else @click="deleteRecord()">Delete</button>
                     </div>
                 </div>                    
             </div>
+
+            <div class="submitError" v-if="ErrorMessage">
+                <h6 class="text-danger">an Error occured</h6>                            
+            </div> 
 
             <div class="p-2 bd-highlight">                
                 <div class="lastUsed" v-for="i in filterItems" :key="i.id">
@@ -53,6 +60,7 @@
                     </p>
                 </div>
             </div>
+
             <div class="p-2 bd-highlight">
                <div class="details-section">
                     <table class="table text-light table-borderless table-sm">
@@ -91,13 +99,15 @@
 <script>
 import { computed, toRef, watch } from '@vue/runtime-core'
 import { useRoute } from 'vue-router'
+import { useMutation } from '@vue/apollo-composable'
+import gql from 'graphql-tag'
 
 export default {
     name: "RecordDetails",    
     props: {
         uniqueCustomers: Object,
-        dateTime: Object,
-        dateRange: Object,
+        dateTime: Function,
+        dateRange: Function,
     },
     emits: ['closeDetails', 'showEditModal', 'showSection', 'showSms'],
 
@@ -108,11 +118,10 @@ export default {
         const CustomerContact = computed(() => route.params.customerContact)
         const lastUse = computed(() => route.params.lastUse)
         const rider = computed(() => route.params.firstRider)
+        const riderId = computed(() => route.params.riderId)
         const DateCreated = computed(() => route.params.dateCreated)
         const discount = computed(() => route.params.discount)
         const listDelivery = computed(() => route.params.listDelivery)               
-
-        console.log('details Page', DateCreated.value)
         
         const getCustomerDetails = toRef(props, 'uniqueCustomers')        
         const sendCloseEvent = () => {
@@ -136,8 +145,21 @@ export default {
         const filterItems = computed (() => getCustomerDetails.value.filter(
                 getCustomers => getCustomers.id == route.params.id
             ))
+
+        const { mutate: deleteRecord, error:ErrorMessage, loading} = useMutation(gql`
+            mutation deleteLog($id:ID!){
+             deleteLog( id: $id 
+             ){ 
+                deleteLog {
+                    id
+                    }
+                }
+            }
+        `, () => ({
+            variables: { id: GetId.value}
+        }))
         
-        return{ 
+        return{  
             CustomerName,
             CustomerContact,
             lastUse,
@@ -149,7 +171,11 @@ export default {
             GetId,
             sendEditModal,
             DateCreated,
-            smsPageEvent
+            smsPageEvent,
+            riderId,
+            deleteRecord,
+            ErrorMessage,
+            loading,
         }
     },
 }

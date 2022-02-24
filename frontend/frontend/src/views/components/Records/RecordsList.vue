@@ -57,6 +57,7 @@
                                             customerContact: i.customerContact,
                                             lastUse: i.count.length + 1 ,
                                             firstRider: i.Rider.riderName,
+                                            riderId: i.Rider.id,
                                             discount: i.discountAmount,   
                                             dateCreated: i.dateCreated                                  
                                         }                                
@@ -139,7 +140,7 @@ export default {
         const multipleEntries = toRef(props, 'multipleCustomers')
 
         const searchName = ref('')
-        const hidePage = ref(false)        
+        const hidePage = ref(false)
         const changeState = () => hidePage.value = !hidePage.value
         const changeStateOnce = () => hidePage.value = true
 

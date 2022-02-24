@@ -155,28 +155,44 @@ class EditRidersLog(graphene.Mutation):
         customerName = graphene.String()
         customerContact = graphene.String()
         rider = graphene.Int(name='rider')
-        dateCreated = graphene.types.DateTime()
-
+        dateCreated = graphene.types.DateTime()    
+        
     edit_log = graphene.Field(Riders_LogType)
 
-    @classmethod
-    def mutate(root, info, id, customerName, customerContact, rider, dateCreated):
-        edit_log = Riders_Log.objects.get(id = id)
+    @classmethod 
+    def mutate(cls, root, info, customerName, customerContact, rider, dateCreated, id):        
+
+        edit_log = Riders_Log.objects.get(pk = id)
         edit_log.customer_name = customerName
         edit_log.customer_contact = customerContact
+        print(customerContact)
         
         if rider is not None:
-            rider_object = Riders.objects.get(pk = rider)
-        edit_log.rider = rider_object
+            rider_object = Riders.objects.get(pk = rider)            
+        edit_log.Rider = rider_object
         edit_log.date_created = dateCreated
         edit_log.save()
 
         return EditRidersLog( edit_log = edit_log )
+
+
+class DeleteRidersLog(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID()        
+
+    delete_log = graphene.Field(Riders_LogType)    
+
+    @classmethod
+    def mutate(cls, root, info, id):
+        delete_log = Riders_Log.objects.get(pk=id).delete()
+
+        return DeleteRidersLog( delete_log = delete_log )
         
 class Mutation(AuthMutation, graphene.ObjectType):
     addRiders = AddRiders.Field()
     createUser = CreateUser.Field()
     createRidersLog = CreateRidersLog.Field()
     editRidersLog = EditRidersLog.Field()
+    deleteLog = DeleteRidersLog.Field()
 
 schema = graphene.Schema(query=Query, mutation = Mutation)

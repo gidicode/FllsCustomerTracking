@@ -1,6 +1,5 @@
 import gql from "graphql-tag"
-import { useQuery, useResult} from '@vue/apollo-composable'
-import { provideApolloClient} from '@vue/apollo-composable'
+import { useQuery, useResult, provideApolloClient} from '@vue/apollo-composable'
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client/core'
 import { logErrorMessages } from '@vue/apollo-util'
 import { onError } from '@apollo/client/link/error'

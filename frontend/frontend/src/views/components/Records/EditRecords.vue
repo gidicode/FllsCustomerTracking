@@ -26,7 +26,7 @@
                 <div class="mt-3">
                     <label for="Select-Rider" class="form-label"> Select Rider</label>
                     <select class="form-select" aria-label="Select Rider" id="Select-Rider" v-model= "selectRider">
-                        <option selected disabled> {{ selectRider }} </option>                                                        
+                        <option selected :value="riderValueId"> {{ selectRider }} </option>                                                        
                         <option v-for="rider in getRiders" :key="rider.id" :value="rider.id">
                             {{ rider.riderName}} 
                         </option>
@@ -72,6 +72,7 @@ export default {
         const customerNames = computed(() => route.params.customerName)
         const customerContacts = computed(() => route.params.customerContact)
         const riders = computed(() => route.params.rider)
+        const riderId = computed(() => route.params.riderId)
         const Ddate = computed(() => route.params.dateCreated)
         const getCustomerDetails = toRef(props, 'uniqueCustomers')        
         
@@ -84,12 +85,13 @@ export default {
 
         const filterCustomers = computed(() => getCustomerDetails.value.filter(
             getCustomer => getCustomer.id == customerId.value
-        ))         
+        ))
 
         const customerName = ref(customerNames.value)        
         const customerContact = ref(customerContacts.value)
         const selectRider = ref(riders.value)
-        const theDate = ref(Ddate.value) 
+        const riderValueId = ref(riderId.value)
+        const theDate = ref(Ddate.value)         
 
         const sendEditModal = ()=> {
             context.emit('showEditModal')
@@ -133,41 +135,41 @@ export default {
 */
         const { mutate: editEntries, onDone, 
                 error: ErrorMessage, loading} = useMutation(gql`
-                    mutation editRidersLog(                        
-                        $id: ID!,
+                    mutation editRidersLog(     
+                        $id: ID!,                                           
                         $customerName: String!,
                         $customerContact: String!,
                         $rider: Int!,
                         $dateCreated: DateTime!
                     ){
-                        editRidersLog(                            
-                            id: $ID,
+                        editRidersLog(  
+                            id: $id,                                                      
                             customerName: $customerName,
                             customerContact: $customerContact,
                             rider: $rider,
                             dateCreated: $dateCreated
                         ){
-                            editLog {
-                                id
+                            editLog {    
+                                id                            
                                 customerName
-                                customerContact
-                                dateCreated
-                                Rider {
+                                customerContact                                
+                                Rider {                                    
                                     id
-                                    riderName
-                                    riderNumber
+                                    riderName                       
                                 }
+                                dateCreated
                             }
                         }
                     }
                 `, () => ({
-                    variables: ({
+                    variables: {
                         id: customerId.value,
                         customerName: customerName.value,
                         customerContact: customerContact.value,
                         rider: selectRider.value,
                         dateCreated: new Date(theDate.value)
-                    })
+                  
+                    },
                 })
             )            
 
@@ -195,7 +197,8 @@ export default {
              */
              ErrorMessage,
              loading,
-             editEntries
+             editEntries,
+             riderValueId
         }
     }   
 }
