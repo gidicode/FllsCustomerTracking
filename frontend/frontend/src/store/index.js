@@ -15,7 +15,8 @@ const authenticated = user
 const store = createStore({
     state () {
         return {
-           authenticated
+           authenticated,
+           searchNameNumer: 'Hello',
         }
     },
 
@@ -52,6 +53,10 @@ const store = createStore({
 
         registerFailure(state) {
             state.authenticated.status.loggedIn = false
+        },
+
+        pushNumber (state, payload) {
+            state.searchNameNumer = payload
         }
     }
 

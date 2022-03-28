@@ -1,3 +1,4 @@
+from re import search
 import graphene
 from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
@@ -29,7 +30,11 @@ class MultipleEntriesType(DjangoObjectType):
 #Query
 class Query(graphene.ObjectType):
     ridersList = graphene.List(RidersType)
-    customerEntries = graphene.List(Riders_LogType)
+    customerEntries = graphene.List(
+        Riders_LogType,        
+        first = graphene.Int(),
+        skip = graphene.Int()
+        )
     relatedEnteries = graphene.List(MultipleEntriesType)
     entriesTodaySingle = graphene.List(Riders_LogType)
     entriesTodayMultiple = graphene.List(MultipleEntriesType)
@@ -37,8 +42,15 @@ class Query(graphene.ObjectType):
     def resolve_ridersList(root, info):        
         return Riders.objects.all()
 
-    def resolve_customerEntries(root, info):
-        return Riders_Log.objects.all()
+    def resolve_customerEntries(root, info,  first=None, skip = None, **kwargs):
+        qs = Riders_Log.objects.all()
+        if skip:
+            qs = qs[skip:]
+        if first:
+            qs = qs[:first]
+
+        return qs
+
         
     def resolve_relatedEnteries(root, info):
         return MultipleEntries.objects.select_related("customer").all()    
@@ -127,9 +139,7 @@ class CreateRidersLog(graphene.Mutation):
                     rider_object = Riders.objects.get(pk = rider)
                 log.Rider = rider_object
                 log.save()
-
-            else:      
-               
+            else:                     
                 multiple_log = MultipleEntries.objects.create(                    
                     customer_contact = customer_contact,                    
                     discount_amount = discount_amount,
@@ -148,7 +158,6 @@ class CreateRidersLog(graphene.Mutation):
 
         return CreateRidersLog(riders_log = CreateEntries())
 
-
 class EditRidersLog(graphene.Mutation):
     class Arguments:
         id = graphene.ID()
@@ -161,20 +170,19 @@ class EditRidersLog(graphene.Mutation):
 
     @classmethod 
     def mutate(cls, root, info, customerName, customerContact, rider, dateCreated, id):        
-
         edit_log = Riders_Log.objects.get(pk = id)
         edit_log.customer_name = customerName
         edit_log.customer_contact = customerContact
-        print(customerContact)
+        
         
         if rider is not None:
             rider_object = Riders.objects.get(pk = rider)            
         edit_log.Rider = rider_object
         edit_log.date_created = dateCreated
+        print(rider_object)
         edit_log.save()
 
         return EditRidersLog( edit_log = edit_log )
-
 
 class DeleteRidersLog(graphene.Mutation):
     class Arguments:
@@ -182,17 +190,19 @@ class DeleteRidersLog(graphene.Mutation):
 
     delete_log = graphene.Field(Riders_LogType)    
 
-    @classmethod
+    @classmethod  
     def mutate(cls, root, info, id):
-        delete_log = Riders_Log.objects.get(pk=id).delete()
+        delete_log = Riders_Log.objects.get(pk=id)
+        print( 'INFO: ',id, delete_log)
+        delete_log.delete()        
 
-        return DeleteRidersLog( delete_log = delete_log )
+        #return DeleteRidersLog( delete_log = delete_log )
         
 class Mutation(AuthMutation, graphene.ObjectType):
     addRiders = AddRiders.Field()
     createUser = CreateUser.Field()
     createRidersLog = CreateRidersLog.Field()
     editRidersLog = EditRidersLog.Field()
-    deleteLog = DeleteRidersLog.Field()
+    deleteRidersLog = DeleteRidersLog.Field()
 
 schema = graphene.Schema(query=Query, mutation = Mutation)

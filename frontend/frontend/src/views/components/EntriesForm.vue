@@ -1,5 +1,5 @@
 <template>
-    <div class="formDesign shadow mb-3">
+    <div class="formDesign shadow mb-3">        
         <form @submit.prevent="onSubmit()">
             <div class="mb-3">
                 <label for="customerName" class="form-label">Customer Name</label>
@@ -52,6 +52,8 @@ import { useField, useForm } from 'vee-validate'
 import * as yup from 'yup'
 import { useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
+import { useStore } from 'vuex'
+import { computed, watch } from 'vue'
 
 export default {
     name: 'EntriesForm',
@@ -60,6 +62,8 @@ export default {
     },
 
     setup() {
+        const store = useStore()            
+        const searchNamess = computed(() => store.state.searchNameNumer)
         const schema = yup.object({
             customerName: yup.string(),
             customerContact: yup.string().required().matches(/^[0-9]+$/).min(11, "Must be 11 characters").max(11, "Must be 11 characters"),
@@ -95,7 +99,12 @@ export default {
         const { value: customerContact, errorMessage: customerContactError} = useField('customerContact')
         const { value: dateCreated, errorMessage: dateCreatedError } = useField('dateCreated')
         const { value: Discount, errorMessage: DiscountError } = useField('Discount')
-        const { value: selectRider, errorMessage: selectRiderError } = useField('selectRider')        
+        const { value: selectRider, errorMessage: selectRiderError } = useField('selectRider')                        
+
+        watch( 
+            () => searchNamess.value,
+            () => { customerContact.value = searchNamess.value}
+        )        
 
         const { mutate: createDailyEntries, 
                 onDone, 
@@ -149,12 +158,12 @@ export default {
             onSubmit,
             ErrorMessage,
             loading,
-
             customerName,
             customerContact,
             Discount,
             selectRider,
-            dateCreated
+            dateCreated,
+            searchNamess
         }  
     },   
 }

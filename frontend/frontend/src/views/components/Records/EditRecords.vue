@@ -5,7 +5,7 @@
 
         <div class="form-background">
             <p class="text-primary">Edit Customer Details</p>
-            <form @submit.prevent="editEntries()">
+            <form>
                 <div class="mb-3">
                     <label for="customerName" class="form-label">Customer Name</label>
                     <input type="text" class="form-control" id="customerName" v-model= "customerName">                
@@ -26,25 +26,31 @@
                 <div class="mt-3">
                     <label for="Select-Rider" class="form-label"> Select Rider</label>
                     <select class="form-select" aria-label="Select Rider" id="Select-Rider" v-model= "selectRider">
-                        <option selected :value="riderValueId"> {{ selectRider }} </option>                                                        
+                        <option selected > {{ selectRider }} </option>                                                        
                         <option v-for="rider in getRiders" :key="rider.id" :value="rider.id">
                             {{ rider.riderName}} 
                         </option>
                     </select>
-                </div>
-                <span class="error-text"></span>
+                </div>                
                 
                 <button class="btn btn-primary mt-4" type="button" disabled v-if="loading">
                     <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
                     Loading...
                 </button>  
-                <button type="submit" class="btn btn-primary mt-4" v-else>Submit</button>
+                <button type="button" class="btn btn-primary mt-4" @click="editEntries" v-else>Submit</button>
                 
             </form>      
         
             <div class="submitError" v-if="ErrorMessage">
-                <h6 class="text-danger">an Error occured</h6>                            
+                <h6 class="text-danger">An error occured</h6>                                            
             </div> 
+
+            <div class="" v-if="Done">
+                <h6 class="text-success">
+                    Successfull
+                </h6>
+            </div>
+
         </div>
     </div>
 </template>
@@ -68,14 +74,8 @@ export default {
 
     setup(props, context) {
         const route = useRoute()
-        const customerId = computed(() => route.params.id)
-        const customerNames = computed(() => route.params.customerName)
-        const customerContacts = computed(() => route.params.customerContact)
-        const riders = computed(() => route.params.rider)
-        const riderId = computed(() => route.params.riderId)
-        const Ddate = computed(() => route.params.dateCreated)
-        const getCustomerDetails = toRef(props, 'uniqueCustomers')        
-        
+        const customerId = computed(() => route.params.id)                
+        const getCustomerDetails = toRef(props, 'uniqueCustomers')                
         const getRiders = computed(() => GetRiders.value)
         
         watch(
@@ -86,54 +86,28 @@ export default {
         const filterCustomers = computed(() => getCustomerDetails.value.filter(
             getCustomer => getCustomer.id == customerId.value
         ))
+        const customerObject = ref({})
+        filterCustomers.value.forEach(element => { customerObject.value = element})
+        
+        const customerNames = computed(() => customerObject.value.customerName)
+        const customerContacts = computed(() => customerObject.value.customerContact)
+        const riders = computed(() => customerObject.value.Rider.riderName)
+        const riderId = computed(() => route.params.riderId)
+        const Ddate = computed(() => customerObject.value.dateCreated)
 
         const customerName = ref(customerNames.value)        
         const customerContact = ref(customerContacts.value)
-        const selectRider = ref(riders.value)
+        const selectRider = ref(riders.value)        
         const riderValueId = ref(riderId.value)
-        const theDate = ref(Ddate.value)         
+        const theDate = ref(Ddate.value)
+        const Done = ref(false)
 
         const sendEditModal = ()=> {
             context.emit('showEditModal')
             context.emit('showSection')
-        }               
-/*
-        const schema = yup.object({
-            customerName: yup.string(),
-            customerContact: yup.string().required().matches(/^[0-9]+$/).min(11, "Must be 11 characters").max(11, "Must be 11 characters"),
-            selectRider: yup.number().positive().integer(),
-            theDate: yup.date(),
-        })
+        } 
 
-        useForm({
-            validationSchema: schema,
-        })        
-
-        const { handleSubmit } = useForm({
-            validationSchema: schema,
-        })
-
-        const onSubmit = handleSubmit(( values, { resetForm }) => {
-            editEntries()            
-
-            onDone(() => {
-                resetForm({
-                    values: {
-                        customerName: customerName.value,
-                        customerContact: customerContact.value,
-                        dateCreated: theDate.value,
-                        rider: selectRider.value
-                    }
-                })
-            })
-        })
-
-        const { value: customerName, errorMessage: customerNameError } = useField('customerName')
-        const { value: customerContact, errorMessage: customerContactError } = useField('customerContact')
-        const { value: theDate, errorMessage: dateCreatedError } = useField('dateCreated')
-        const { value: selectRider, errorMessage: selectRiderError } = useField('selectRider')
-*/
-        const { mutate: editEntries, onDone, 
+        const { mutate: editEntries, onDone,
                 error: ErrorMessage, loading} = useMutation(gql`
                     mutation editRidersLog(     
                         $id: ID!,                                           
@@ -152,10 +126,10 @@ export default {
                             editLog {    
                                 id                            
                                 customerName
-                                customerContact                                
+                                customerContact 
                                 Rider {                                    
                                     id
-                                    riderName                       
+                                    riderName
                                 }
                                 dateCreated
                             }
@@ -164,21 +138,17 @@ export default {
                 `, () => ({
                     variables: {
                         id: customerId.value,
-                        customerName: customerName.value,
-                        customerContact: customerContact.value,
+                        customerName: customerNames.value,
+                        customerContact: customerContacts.value,
                         rider: selectRider.value,
-                        dateCreated: new Date(theDate.value)
-                  
+                        dateCreated: new Date(Ddate.value)                  
                     },
                 })
             )            
-
-            onDone({
-                customerName: customerName.value,
-                customerContact: customerContact.value,
-                rider: selectRider.value,
-                dateCreated: theDate.value
+            onDone(() => {
+                Done.value = true
             })
+
 
          return {
              sendEditModal,
@@ -188,23 +158,15 @@ export default {
              customerId,
              customerName,
              customerContact,
-             getRiders,             
-            /* customerContactError,
-             customerNameError,
-             dateCreatedError,
-             selectRiderError,             
-             onSubmit,
-             */
+             getRiders,                                           
              ErrorMessage,
              loading,
              editEntries,
-             riderValueId
+             riderValueId,
+             Done
         }
     }   
 }
-
-
-
 </script>
 
 <style scoped>

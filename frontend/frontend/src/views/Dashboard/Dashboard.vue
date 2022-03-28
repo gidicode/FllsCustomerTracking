@@ -54,9 +54,22 @@
                                 </div>                            
                             </div>                                                                                   
                         </router-link>
+
+                        <router-link to="/dashboard/sendSms">
+                            <div class="d-flex flex-row bd-highlight mb-3 background">
+                                <div class="p-2 bd-highlight">
+                                <h6>
+                                    <i class="fas fa-truck"></i>
+                                    </h6>
+                                </div>
+                                <div class="p-2 bd-highlight">
+                                    <h6 role="button">Send Sms</h6>
+                                </div>                            
+                            </div>                                                                                   
+                        </router-link>
                     </section>
                 </div>
-                <div class="col-md-10">                    
+                <div class="col-md-10 bg-light">                    
                     <section class="the-body mt-3">
                         <div class="container">                            
                             <router-view/>
@@ -117,7 +130,7 @@ export default {
     }
 
     .the-body {
-        height: 550px;
+        height: 580px;
         overflow: scroll;       
     }
 

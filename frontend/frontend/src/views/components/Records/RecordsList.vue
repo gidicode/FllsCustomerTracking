@@ -55,7 +55,7 @@
                                             id:i.id,
                                             customerName: i.customerName,
                                             customerContact: i.customerContact,
-                                            lastUse: i.count.length + 1 ,
+                                            lastUse: i.count.length + 1,
                                             firstRider: i.Rider.riderName,
                                             riderId: i.Rider.id,
                                             discount: i.discountAmount,   
@@ -66,14 +66,16 @@
                                         {{ i.customerName }}
                                     </router-link>
                                 </td>                        
-                                <td>{{ i.customerContact }}</td>
+                                <td>{{ i.customerContact }}
+                                    {{ i.__typename }}
+                                </td>
                                 <td> {{dateTime( i.dateCreated ) }} </td>
                                 <td>{{ i.count.length + 1 }} </td>
                                 <td v-if="i.count == '' "> 
-                                        {{ dateRange(i.dateCreated) }}                                          
+                                    {{ dateRange(i.dateCreated) }}                                          
                                 </td>     
                                 <td v-else>
-                                        <div  v-for="items in i.count.slice(0, 1)" :key="items.id">
+                                    <div  v-for="items in i.count.slice(0, 1)" :key="items.id">
                                         {{ dateRange(items.dateCreated) }}
                                     </div>  
                                 </td>                                                               
@@ -83,15 +85,16 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="sticky-top" v-if="hidePage"                                                     >
+                <div class="sticky-top the-details" v-if="hidePage"                                                     >
                     <RecordDetails
-                    :uniqueCustomers= "uniqueCustomers"
-                    :dateTime = "dateTime"
-                    :dateRange = "dateRange"
-                    @closeDetails = 'changeState'
-                    @showEditModal = 'showEditModal'
-                    @showSection = 'showSectionOnce'
-                    @showSms = 'showSms'
+                        :uniqueCustomers= "uniqueCustomers"
+                        :dateTime = "dateTime"       
+                        :dateRange = "dateRange"
+                        @closeDetails = 'changeState'
+                        @showEditModal = 'showEditModal'
+                        @showSection = 'showSectionOnce'
+                        @showSms = 'showSms'
+                        @showDelete = 'showDelete'
                     />                                 
                 </div>
 
@@ -100,15 +103,24 @@
         <div class="back-drop" v-if="hideEditModal">
             <EditRecords 
                 :uniqueCustomers = 'uniqueCustomers'
-                @showEditModal = 'showEditModal'                
-                @showSection = 'showSection'
+                @showEditModal ='showEditModal'                
+                @showSection ='showSection'
             />
         </div>
 
         <div class="back-drop" v-if="hideSms">
             <SingleSms
                 @showEditModal = 'showSms'
+                :uniqueCustomers = 'uniqueCustomers'
             />
+        </div>
+
+        <div class="back-drop" v-if="hideDelete">
+            <DeleteCustomer
+                :uniqueCustomers = 'uniqueCustomers'
+                @showDelete = 'showDelete'
+            />
+            <h5>gello</h5>
         </div>
         
     </div>
@@ -118,6 +130,7 @@
 import moment from 'moment'
 import  RecordDetails from '../Records/RecordsDetails.vue'
 import  EditRecords from '../Records/EditRecords.vue'
+import DeleteCustomer from '../DeleteCustomer.vue'
 import SingleSms from '../SingleSms.vue'
 import { computed, ref, toRef } from '@vue/reactivity'
 
@@ -127,7 +140,8 @@ export default {
     components: {
         RecordDetails,
         EditRecords,
-        SingleSms
+        SingleSms,
+        DeleteCustomer
     },
 
     props: {
@@ -151,6 +165,9 @@ export default {
         const showSection = () => HideSection.value = !HideSection.value
         
         const showSectionOnce = () => HideSection.value = false
+
+        const hideDelete = ref(false)
+        const showDelete = () => hideDelete.value = !hideDelete.value
 
         const hideSms = ref(false)
         const showSms= () => hideSms.value = !hideSms.value
@@ -186,6 +203,7 @@ export default {
             RecordDetails,
             EditRecords,
             SingleSms,
+            DeleteCustomer,
             searchName,
             searchedCustomers,  
             hidePage,          
@@ -199,7 +217,9 @@ export default {
             HideSection,
             hideSms,
             showSms,
-            showSectionOnce
+            showSectionOnce,
+            showDelete,
+            hideDelete
         }
     },
 }
@@ -252,6 +272,11 @@ a {
     left: 0px;
     bottom: 0px;
     background: rgba(0, 0, 0, 0.5);        
+}
+
+.the-details{
+    z-index: 2;
+    height: 400px;
 }
 
 </style>

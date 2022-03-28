@@ -19,7 +19,7 @@
         </form>        
         <div class="submitError" v-if="ErrorMessage">
             <h6 class="text-danger">an Error occured {{ ErrorMessage }}</h6>                            
-        </div>          
+        </div>
     </div>
 </template>
 

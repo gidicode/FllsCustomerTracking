@@ -71,7 +71,6 @@ export default {
         }
     })
     
-
     const {mutate: login, onDone, loading:loginLoading } = useMutation(gql`
             mutation ( $email: String!, $password: String!){
                 tokenAuth( email: $email, password: $password) {

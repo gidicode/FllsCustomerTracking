@@ -43,18 +43,35 @@
 </template>
 
 <script>
-import { computed, ref} from '@vue/reactivity'
+import { computed, ref, toRef} from '@vue/reactivity'
 import { useRoute } from 'vue-router'
 import { useField, useForm } from 'vee-validate'
 import * as yup from 'yup'
+import { watch } from '@vue/runtime-core'
 
 export default {
     name: 'SingleSms',
     emits: ['showEditModal'],
+    props: {
+        uniqueCustomers: Object
+    },
 
     setup(props, context) {
         const route = useRoute()
-        const customerNumber = computed(() => route.params.customerContact)        
+        const GetId = computed(() => route.params.id )
+        const customerNumber = ref('')
+        const getCustomerDetails = toRef(props, 'uniqueCustomers')
+
+        watch(
+            () => route.params.id,
+            () => { filterContact }
+        )
+
+        const filterContact = computed(() => getCustomerDetails.value.filter (
+            getCustomers => getCustomers.id == GetId.value
+        ))
+        filterContact.value.forEach(element => { customerNumber.value = element.customerContact})
+
         const schema = yup.object({
             Message: yup.string().required().max(200, 'Exceed message space'),
         })          
@@ -78,52 +95,46 @@ export default {
 
         const changeLoadingState = () => loading.value = !loading.value
         const changeSuccessState = () => success.value = !success.value
-        const changeSmsErrorState = () => smsError.value = !smsError.value
+        const changeSmsErrorState = () => smsError.value = !smsError.value        
                  
         const onSubmit = handleSubmit(() => {                  
-            changeLoadingState()
+            changeLoadingState()           
 
-            const url = 'https://app.multitexter.com/v2/app/sendsms'
-            const raw = {
+           var raw = {
                 "sender_name" : "FLLS",
-                "message": ref(Message.value),
+                "message": '',
                 "recipients": customerNumber.value,
-            }  
-            //raw.message = Message.value
+            }
 
-            const requestOptions = {
-            method: 'POST',
-            body: JSON.stringify(raw),
-            redirect: 'follow',
-            headers: {
-                'Authorization': 'Bearer E9jriOUBg5ssOLSAc6DzE94O9cjxQ5kB6iW7DEv6mEADXs5Q2QcPXgOS0AVL',
-                'Access-Control-Allow-Origin': '*',
-                'Content-Type': 'application/json',                            
-                },
-            };                      
+            raw.message = Message.value
 
-            fetch(url, requestOptions)
-            .then(response => response.text())
-            .then(result => {
-                console.log(result)
-                console.log(loading.value)
-                GettingResult.value = JSON.parse(result)   
+            var requestOptions = {
+                method: 'POST',
+                body: JSON.stringify(raw),
+                redirect: 'follow',
+                headers: {
+                    'Authorization': 'Bearer E9jriOUBg5ssOLSAc6DzE94O9cjxQ5kB6iW7DEv6mEADXs5Q2QcPXgOS0AVL',
+                    'Content-Type' : 'application/json'                
+                }}
 
-                console.log(GettingResult.value)
-                console.log('message', raw.message.value)
-                changeLoadingState()
+                fetch("https://app.multitexter.com/v2/app/sendsms", requestOptions)
+                .then(response => response.text())
+                .then(result => {
+                    GettingResult.value = JSON.parse(result)               
+                    changeLoadingState()
 
-                if (GettingResult.value.status !== 1 ) {                    
-                    changeSmsErrorState()
-                } else if (GettingResult.value.status === 1) {
-                    changeSuccessState()
-                }
-            }) 
-            .catch(error => {
-                if (error) {
-                    alert('An error occured')
-                }
-            });
+                    if (GettingResult.value.status !== 1) {
+                        smsError.value = true
+                    }else if (GettingResult.value.status === 1 ) {
+                        changeSuccessState()
+                    }
+                })
+                .catch(error => {
+                    if (error) {
+                        changeSmsErrorState()
+                        changeLoadingState()
+                    }
+                });
         })        
 
         return {

@@ -1,38 +1,115 @@
 <template >    
     <div class="container-fluid">
-        <h6 class="mb-4">Entries Tday</h6>
-        <div class="row">
-            <div class="col">
-                <span class="title mb-2">Individual</span>  
-                <p v-for="i in singleEntries" :key="i.id" class="changeText">                         
-                    <strong>{{ i.customerName }} </strong> {{ i.customerContact }}
-                </p> 
-            </div>
-            <div class="col">
-                <span class="title mb-2" >Repeated</span>  
-                <p v-for="i in multipleEntries" :key="i.id" class="changeText"> 
-                            
-                    <strong>{{ i.customer.customerName }} </strong> {{ i.customer.customerContact }}
-                </p> 
-            </div>
-        </div>        
+        <div class="input-group">
+            <span class="input-group-text icon" id="basic-addon1"><i class="fas fa-search text-white"></i></span>                     
+            <input type="text" v-model="searchName" class="form-control" placeholder="Search..." aria-describedby="basic-addon1"/>
+            <span class="clear btn btn-outline-dark" @click="clearSearch()">
+                <i class="fas fa-times"></i></span>            
+        </div>
+
+        <div v-if="searchName.length > 0" class="mt-4">
+            <ul v-for="items in searchedCustomers" :key="items.id">
+                <li> {{ items.customerName}} {{ items.customerContact}}
+                    <span @click="pushNumber(items.customerContact)" class="btn btn-sm btn-outline-success">Add</span>
+                </li>
+            </ul>
+        </div>
+
+        <p v-if="loading == true">
+            loading....
+        </p>
+
+        
+        
     </div>                    
 </template>
 
 <script>
-import { computed } from '@vue/reactivity'
-import { multipleEntriesToday, singleEntriesToday } from '../../graphql'
+import { computed, ref } from '@vue/reactivity'
+import { RecordQueryUnique } from '../../graphql'
+import { useStore } from 'vuex'
+//import gql from "graphql-tag"
+//import { useQuery } from '@vue/apollo-composable'
 
 export default {
     name: 'EntriesToday',
+    //props: ['type'],
     setup() {
-        const singleEntries = computed(() => singleEntriesToday.value)
-        const multipleEntries = computed(() => multipleEntriesToday.value)                
-        //console.log(singleEntries.value, 'single')
-        
+        const store = useStore()
+        const uniqueCustomers = computed(() => RecordQueryUnique.value)                
+
+        const searchName = ref('')
+        const searchedCustomers = computed(() => {
+            return uniqueCustomers.value.filter((allCustomer) => {
+                return (
+                    allCustomer.customerName
+                    .toLowerCase()
+                    .indexOf(searchName.value.toLowerCase()) != -1 ||
+                    allCustomer.customerContact
+                    .toLowerCase()
+                    .indexOf(searchName.value.toLowerCase()) != -1
+                )  
+            }) 
+        })
+
+        const clearSearch = () => searchName.value = ''
+
+        const pushNumber = (item) => {
+            store.commit('pushNumber', item)
+        }
+
+        //////////
+        /*
+        const {result, fetchMore, loading } = useQuery(FEED_QUERY, () => ({
+            type: props.type,
+            offset: 0,
+            limit: 10,
+        }))        
+            
+        function loadMore () {
+            fetchMore({
+                // note this is a different query than the one used in `useQuery`
+                query: gql`
+                query getMoreFeed ($cursor) {
+                    moreFeed (type: $type, cursor: $cursor) {
+                    cursor
+                    posts {
+                        id
+                        # ...
+                    }
+                    }
+                }
+                `,
+                variables: {
+                cursor: result.feed.cursor,
+                },
+                updateQuery: (previousResult, { fetchMoreResult }) => {
+                return {
+                    ...previousResult,
+                    feed: {
+                    ...previousResult.feed,
+                    // Update cursor
+                    cursor: fetchMoreResult.moreFeed.cursor,
+                    // Concat previous feed with new feed posts
+                    posts: [
+                        ...previousResult.feed.posts,
+                        ...fetchMoreResult.moreFeed.posts,
+                    ],
+                    }
+                }
+                },
+            })
+        }*/
+
         return {
-            multipleEntries,
-            singleEntries
+            uniqueCustomers,
+            searchName, 
+            searchedCustomers,
+            clearSearch,
+            pushNumber,
+            //loadMore,
+            //result,
+            //loading
         }
     },
 }

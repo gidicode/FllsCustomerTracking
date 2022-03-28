@@ -8,7 +8,9 @@ import SingleSms from '../views/components/SingleSms.vue'
 import RidersDetails from '../views/components/RidersDetails.vue'
 import EditRecords from '../views/components/Records/EditRecords.vue'
 import Record from '../views/Dashboard/Records.vue'
+import SendSms from '../views/Dashboard/SendSms.vue'
 import RecordDetails from '../views/components/Records/RecordsDetails.vue'
+import DeleteCustomer from '../views/components/DeleteCustomer.vue'
 import store from '../store'
 
 const routes = [
@@ -59,6 +61,13 @@ const routes = [
                         name: 'SingleSms',
                         component: SingleSms,
                         meta: { requiresAuth: true},
+                    },
+
+                    {
+                        path: 'deleteCustomer/:id',
+                        name: 'DeleteCustomer',
+                        component: DeleteCustomer,
+                        meta: { requiresAuth: true}
                     }
                 ]
             },            
@@ -79,6 +88,13 @@ const routes = [
                         meta: { requiresAuth: true }
                     }
                 ],
+            },
+
+            {
+                path: 'SendSms',
+                name: "SendSms",
+                component: SendSms,
+                meta: { requiresAuth: true}
             }
         
         ]

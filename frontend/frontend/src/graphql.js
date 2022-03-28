@@ -41,6 +41,15 @@ export const GETRIDER  = gql`
     },    
 `
 
+export const FEED_QUERY = gql`
+    query customerEntries  {                      
+            customerEntries {                                                                           
+                id
+                customerName            
+            }
+        }
+    `
+
 const { result: EntriesToday } = useQuery(gql`
         query singleEntries {
             entriesTodaySingle{
@@ -61,11 +70,31 @@ const { result: EntriesToday } = useQuery(gql`
 
 
 export const ENTRIES = gql`
-    query EntriesToday {
-        entriesTodaySingle{
+    query customerEntries {
+        customerEntries {
             id
             customerName
-        }
+            customerContact
+            Rider {
+                id
+                riderName
+                riderNumber
+            }
+            count {
+                id
+                customerContact
+                dateCreated                
+                discountAmount
+                Rider{
+                    id
+                    riderName
+                    riderNumber
+                }
+            }
+            discountAmount
+            dateCreated
+        
+        },
     }
 `
 
@@ -121,3 +150,5 @@ export const multipleEntriesToday = useResult( EntriesToday, [], data => data.en
 export const RecordQueryUnique = useResult( RecordList, [], data => data.customerEntries)
 export const RecordQueryMultiple = useResult( RecordList, [], data => data.relatedEnteries)
 export const load = loading
+
+export const CustomersNumber = useResult(RecordList, [], data => data.customerEntries.customerContact)
