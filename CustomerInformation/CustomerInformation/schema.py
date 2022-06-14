@@ -1,15 +1,18 @@
-from re import search
+from tokenize import String
 import graphene
 from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
 from CustomerEntry.models import Riders, Riders_Log, MultipleEntries
 from graphql_auth import mutations
+from graphene_django.filter import DjangoFilterConnectionField
+from graphene import relay
+from graphql_relay import from_global_id
 
 from datetime import datetime
 
 today = datetime.now().date()  
-
 User = get_user_model()
+
 
 class UserType(DjangoObjectType):
     class Meta:
@@ -21,36 +24,34 @@ class RidersType(DjangoObjectType):
         
 class Riders_LogType(DjangoObjectType):
     class Meta:
-        model = Riders_Log
+        model = Riders_Log        
 
 class MultipleEntriesType(DjangoObjectType):
     class Meta:
         model = MultipleEntries
+#relay
+class EntryNode(DjangoObjectType):
+    class Meta:
+        model = Riders_Log
+        filter_fields = ['customer_name', 'customer_contact']
+        interfaces = (graphene.relay.Node, )
 
 #Query
 class Query(graphene.ObjectType):
     ridersList = graphene.List(RidersType)
-    customerEntries = graphene.List(
-        Riders_LogType,        
-        first = graphene.Int(),
-        skip = graphene.Int()
-        )
+    paginatedEntries =graphene.List(Riders_LogType, limit = graphene.Int(), offset = graphene.Int(), cursor = graphene.String())
+    customerEntries = graphene.List(Riders_LogType)
     relatedEnteries = graphene.List(MultipleEntriesType)
     entriesTodaySingle = graphene.List(Riders_LogType)
     entriesTodayMultiple = graphene.List(MultipleEntriesType)
+    entry = graphene.relay.Node.Field(EntryNode)
+    entries = DjangoFilterConnectionField(EntryNode)
 
-    def resolve_ridersList(root, info):        
-        return Riders.objects.all()
+    def resolve_ridersList(root, info):
+        return Riders.objects.all()   
 
-    def resolve_customerEntries(root, info,  first=None, skip = None, **kwargs):
-        qs = Riders_Log.objects.all()
-        if skip:
-            qs = qs[skip:]
-        if first:
-            qs = qs[:first]
-
-        return qs
-
+    def resolve_customerEntries(root, info ):              
+        return Riders_Log.objects.all()        
         
     def resolve_relatedEnteries(root, info):
         return MultipleEntries.objects.select_related("customer").all()    
@@ -86,7 +87,7 @@ class AddRiders(graphene.Mutation):
 class CreateUser(graphene.Mutation):
     class Arguements:
         id = graphene.ID()
-        first_name = graphene.String()
+        limit_name = graphene.String()
         last_name = graphene.String()
         username = graphene.String()
         email = graphene.String()
@@ -95,12 +96,12 @@ class CreateUser(graphene.Mutation):
     
     user = graphene.Field(UserType)
 
-    @classmethod
+    @classmethod 
     def mutate(root, info, id, 
-        first_name, last_name, username, email,
+        limit_name, last_name, username, email,
         password1, password2):
         user = User.objects.create(
-            first_name = first_name,
+            limit_name = limit_name,
             last_name = last_name,
             username = username,
             email = email,
@@ -158,51 +159,58 @@ class CreateRidersLog(graphene.Mutation):
 
         return CreateRidersLog(riders_log = CreateEntries())
 
-class EditRidersLog(graphene.Mutation):
-    class Arguments:
+class EditRidersLog(relay.ClientIDMutation):
+    class Input:
         id = graphene.ID()
-        customerName = graphene.String()
+        customerName = graphene.String(required = True)
         customerContact = graphene.String()
+        #rider = graphene.String( required = True)
         rider = graphene.Int(name='rider')
         dateCreated = graphene.types.DateTime()    
         
-    edit_log = graphene.Field(Riders_LogType)
+    edit_log = graphene.Field(EntryNode)
 
     @classmethod 
-    def mutate(cls, root, info, customerName, customerContact, rider, dateCreated, id):        
-        edit_log = Riders_Log.objects.get(pk = id)
-        edit_log.customer_name = customerName
-        edit_log.customer_contact = customerContact
-        
-        
-        if rider is not None:
+    def mutate_and_get_payload(cls, root, info, **input):            
+       
+        id = input.get('id')        
+        rider = input.get('rider')
+        edit_log = Riders_Log.objects.get(pk = from_global_id(id)[1])
+        edit_log.customer_name = input.get('customerName')
+        edit_log.customer_contact = input.get('customerContact')
+        edit_log.date_created = input.get('dateCreated' )
+                
+        if rider is not None: 
             rider_object = Riders.objects.get(pk = rider)            
-        edit_log.Rider = rider_object
-        edit_log.date_created = dateCreated
-        print(rider_object)
+        edit_log.Rider = rider_object     
+
         edit_log.save()
 
         return EditRidersLog( edit_log = edit_log )
 
-class DeleteRidersLog(graphene.Mutation):
-    class Arguments:
-        id = graphene.ID()        
+class DeleteRidersLog(relay.ClientIDMutation):
+    class Input:
+        id = graphene.ID()
 
-    delete_log = graphene.Field(Riders_LogType)    
+    delete_log = graphene.Field(EntryNode)    
 
     @classmethod  
-    def mutate(cls, root, info, id):
-        delete_log = Riders_Log.objects.get(pk=id)
-        print( 'INFO: ',id, delete_log)
+    def mutate_and_get_payload(cls, root, info, **input):  
+        id = input.get('id')
+
+        delete_log = Riders_Log.objects.get(pk= from_global_id(id)[1])        
         delete_log.delete()        
 
         #return DeleteRidersLog( delete_log = delete_log )
-        
-class Mutation(AuthMutation, graphene.ObjectType):
+class RelayMutation(graphene.AbstractType):
+    edit_riders_log2 = EditRidersLog.Field()
+
+class Mutation(AuthMutation, RelayMutation, graphene.ObjectType):
     addRiders = AddRiders.Field()
     createUser = CreateUser.Field()
     createRidersLog = CreateRidersLog.Field()
     editRidersLog = EditRidersLog.Field()
     deleteRidersLog = DeleteRidersLog.Field()
+
 
 schema = graphene.Schema(query=Query, mutation = Mutation)

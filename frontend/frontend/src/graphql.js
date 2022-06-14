@@ -23,7 +23,7 @@ const link = createHttpLink({
     uri: 'http://localhost:8000/graphql',
     fetch,
     headers: Headers()
-})
+}) 
 const apolloClient  = new ApolloClient({   
     cache, 
     link: errorlink.concat(link),     
@@ -40,14 +40,41 @@ export const GETRIDER  = gql`
         }
     },    
 `
+export const ENTRIES_QUERY = gql`
+    query paginatedEntries($cursor: String) {
 
-export const FEED_QUERY = gql`
-    query customerEntries  {                      
-            customerEntries {                                                                           
+        entries (first:20, after: $cursor) {            
+          edges {
+            node{
                 id
-                customerName            
+                customerName
+                customerContact
+                Rider {
+                    id
+                    riderName
+                    riderNumber
+                }
+                count {
+                    id
+                    customerContact
+                    dateCreated                
+                    discountAmount
+                    Rider{
+                        id
+                        riderName 
+                        riderNumber
+                    }
+                }
+                discountAmount
+                dateCreated   
             }
+          },
+          pageInfo {
+            endCursor
+            hasNextPage
+          } 
         }
+    }
     `
 
 const { result: EntriesToday } = useQuery(gql`
@@ -92,8 +119,7 @@ export const ENTRIES = gql`
                 }
             }
             discountAmount
-            dateCreated
-        
+            dateCreated        
         },
     }
 `
