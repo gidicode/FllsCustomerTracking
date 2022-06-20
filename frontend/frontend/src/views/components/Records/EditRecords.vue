@@ -1,7 +1,7 @@
 <template>
     <div class="back-drop shadow mb-3" >        
 
-        <button @click.self="sendEditModal()" type="button" class="btn-close close-button btn-light close-button " aria-label="Close"></button>        
+        <button @click.self="hideEditModal()" type="button" class="btn-close close-button btn-light close-button " aria-label="Close"></button>        
 
         <div class="form-background">
             <p class="text-primary">Edit Customer Details</p>
@@ -25,22 +25,21 @@
                 
                 <div class="mt-3">
                     <label for="Select-Rider" class="form-label"> Select Rider</label>
-                    <select class="form-select" aria-label="Select Rider" id="Select-Rider" v-model= "selectRider">
-                        <option selected > {{ selectRider }} </option>                                                        
-                        <option v-for="rider in getRiders" :key="rider.id" :value="rider.id">
+                    <select class="form-select" aria-label="Select Rider" id="Select-Rider" v-model = "selectRider">
+                        <option selected :value="riderId"> {{ selectRider }} </option>                                                        
+                        <option v-for="rider in getRiders" :key="rider.id" :value="rider.id" >
                             {{ rider.riderName}} 
                         </option>
                     </select>
                 </div>                
-                
+            
                 <button class="btn btn-primary mt-4" type="button" disabled v-if="loading">
                     <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
                     Loading...
                 </button>  
-                <button type="button" class="btn btn-primary mt-4" @click="editEntries" v-else>Submit</button>
-                
+                <button type="button" class="btn btn-primary mt-4" @click="editEntries" v-else>Save</button>                
             </form>      
-        
+          
             <div class="submitError" v-if="ErrorMessage">
                 <h6 class="text-danger">An error occured</h6>                                            
             </div> 
@@ -56,72 +55,92 @@
 </template>
 
 <script>
-//import { useField, useForm } from 'vee-validate'
-//import * as yup from 'yup'
+import { GetRiders } from '../../../graphql'
+import { computed, watch, toRef, ref, onMounted } from 'vue'
+import { useStore } from 'vuex'
 import { useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
-import { useRoute } from 'vue-router'
-import { computed, watch, toRef, ref} from '@vue/runtime-core'
-import { GetRiders } from '../../../graphql'
 
 export default {
-    name: 'EditRecords',
-    emits: ['showEditModal', 'showSection'],
+    name: 'EditRecords',    
 
     props: {
         uniqueCustomers: Object,
     },
 
-    setup(props, context) {
-        const route = useRoute()
-        const customerId = computed(() => route.params.id)                
-        const getCustomerDetails = toRef(props, 'uniqueCustomers')                
-        const getRiders = computed(() => GetRiders.value)
-        
-        watch(
-            () => route.params,
-            () => { filterCustomers}
+    setup(props) {        
+        const store = useStore()
+        const customerId = computed(() => store.state.customerId)
+        const getCustomerDetails = toRef(props, 'uniqueCustomers')                        
+
+        const hideEditModal = () => {
+            store.commit('openEditRecord'),
+            store.commit('showRecordHeading')
+            store.commit('canEditCustomer')
+        }
+
+        watch( customerId,
+            () => { filterCustomersToEdit}
         )
 
-        const filterCustomers = computed(() => getCustomerDetails.value.filter(
-            getCustomer => getCustomer.id == customerId.value
+        const filterCustomersToEdit = computed (() => getCustomerDetails.value.entries.edges.filter(
+            getCustomers => getCustomers.node.id == customerId.value
         ))
-        const customerObject = ref({})
-        filterCustomers.value.forEach(element => { customerObject.value = element})
-        
-        const customerNames = computed(() => customerObject.value.customerName)
-        const customerContacts = computed(() => customerObject.value.customerContact)
-        const riders = computed(() => customerObject.value.Rider.riderName)
-        const riderId = computed(() => route.params.riderId)
-        const Ddate = computed(() => customerObject.value.dateCreated)
+        const customerInstance = ref({})
+        //looping to get the instance of the filtered customers and send to customerInstance
+         filterCustomersToEdit.value.forEach(element => { customerInstance.value = element})        
 
-        const customerName = ref(customerNames.value)        
+ 
+        //Customer Instance
+        const customerNames = computed(() => customerInstance.value.node.customerName)
+        const customerContacts = computed(() => customerInstance.value.node.customerContact)
+        //leaving selectRiders so that i can ACCESS other values
+        const selectRiders = computed(() => customerInstance.value.node.Rider.riderName)             
+        //setting default rider Id if no option is selected
+        const riderId = computed(() => customerInstance.value.node.Rider.id)
+        const theDates = computed(() => customerInstance.value.node.dateCreated)
+
+        const Done = ref(false)   
+
+        //Data sent from customerInstance/v-model
+        const customerName = ref(customerNames.value)
         const customerContact = ref(customerContacts.value)
-        const selectRider = ref(riders.value)        
-        const riderValueId = ref(riderId.value)
-        const theDate = ref(Ddate.value)
-        const Done = ref(false)
+        const selectRider = ref(selectRiders.value)
+        const theDate = ref(theDates.value)
 
-        const sendEditModal = ()=> {
-            context.emit('showEditModal')
-            context.emit('showSection')
-        } 
+        console.log("select", riderId.value)
 
-        const { mutate: editEntries, onDone,
+        //Getting list of riders to choose from
+        const getRiders = computed(() => GetRiders.value)   
+        const RiderId = ref(null)        
+
+        //getting rider Id
+        watch( selectRider, 
+            () => { console.log("riderId", RiderId.value)}
+        )
+        
+        onMounted(() => {
+            store.commit('hideRecordHeading')
+        })
+        
+         
+
+         const { mutate: editEntries, onDone,
                 error: ErrorMessage, loading} = useMutation(gql`
-                    mutation editRidersLog(     
+                    mutation editRidersLog2(     
                         $id: ID!,                                           
                         $customerName: String!,
                         $customerContact: String!,
                         $rider: Int!,
                         $dateCreated: DateTime!
                     ){
-                        editRidersLog(  
+                        editRidersLog2( input: {
                             id: $id,                                                      
                             customerName: $customerName,
                             customerContact: $customerContact,
                             rider: $rider,
                             dateCreated: $dateCreated
+                        }                              
                         ){
                             editLog {    
                                 id                            
@@ -138,32 +157,30 @@ export default {
                 `, () => ({
                     variables: {
                         id: customerId.value,
-                        customerName: customerNames.value,
-                        customerContact: customerContacts.value,
+                        customerName: customerName.value,
+                        customerContact: customerContact.value,
                         rider: selectRider.value,
-                        dateCreated: new Date(Ddate.value)                  
+                        dateCreated: new Date(theDate.value)                  
                     },
                 })
             )            
             onDone(() => {
                 Done.value = true
-            })
+            })           
 
-
-         return {
-             sendEditModal,
-             selectRider,
-             theDate,
-             filterCustomers,
-             customerId,
-             customerName,
-             customerContact,
-             getRiders,                                           
-             ErrorMessage,
-             loading,
-             editEntries,
-             riderValueId,
-             Done
+        return {
+            customerId,
+            customerName,
+            customerContact,
+            selectRider,            
+            theDate,
+            Done,
+            hideEditModal,
+            getRiders,
+            ErrorMessage,
+            loading,
+            editEntries,            
+            riderId
         }
     }   
 }
@@ -188,5 +205,6 @@ export default {
 .close-button{
     background-color: white;
 }
+
 
 </style>

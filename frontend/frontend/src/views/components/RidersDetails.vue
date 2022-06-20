@@ -58,7 +58,7 @@
 import { computed, ref } from '@vue/reactivity'
 import { useRoute } from 'vue-router'
 import { RecordQueryUnique, RecordQueryMultiple } from '../../graphql'
-import { watch } from '@vue/runtime-core'
+import { watch } from 'vue'
 import moment from 'moment'
 
 export default {

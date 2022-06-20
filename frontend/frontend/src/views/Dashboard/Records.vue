@@ -1,16 +1,11 @@
 <template>
 <div>
-    <div class="d-flex justify-content-center" v-if="load">
-        <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-    </div>
-
-    <div class="row" v-else>
+    <div class="row">
         <div class="col-md-12">
             <recordList
                 :uniqueCustomers = "uniqueCustomers"
                 :multipleCustomers = "multipleCustomers"
+                :type="type"
             />            
         </div>       
     </div>
@@ -31,12 +26,13 @@ export default {
     setup() {
         const uniqueCustomers = computed(() => RecordQueryUnique.value)
         const multipleCustomers = computed(() => RecordQueryMultiple.value)                
-        
+        const type = "type"               
         return {
             uniqueCustomers,
             multipleCustomers,
             recordList,     
-            load                   
+            load,
+            type           
         }
     },
 }

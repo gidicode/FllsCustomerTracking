@@ -68,7 +68,7 @@ const routes = [
                         name: 'DeleteCustomer',
                         component: DeleteCustomer,
                         meta: { requiresAuth: true}
-                    }
+                    },
                 ]
             },            
 
@@ -114,8 +114,8 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-
-    if(to.meta.requiresAuth && !store.state.authenticated){
+    //console.log('The Store',store.state.authenticated.status.loggedIn)
+    if(to.meta.requiresAuth && !store.state.authenticated.status.loggedIn){
         return {            
             name:'Login',
             query: {redirect: to.fullPath },

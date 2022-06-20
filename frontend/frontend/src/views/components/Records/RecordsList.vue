@@ -1,41 +1,19 @@
  <template>
-    <div>
+    <div class="container-fluid">        
         <div class="row">
             <div class="col-md-8">
                 <div class="theBack">        
-                <section class="sticky-top shadow-sm the-section" v-if="HideSection">
-                        <div class="d-flex flex-row bd-highlight text-white justify-content-between">
-                            <div class="p-2 bd-highlight ">                                               
-                                <p class="lh-1">
-                                    Customer Records 
-                                    <br>
-                                    <span><small>(Unique names)</small></span>    
-                                </p>                         
-                            </div>
-
-                            <div class="p-2 bd-highlight">   
-                                <p class="lh-1">
-                                    <strong> Unique:</strong> <br> {{ searchedCustomers.length }}
-                                </p>                                                                         
-                            </div>
-
-                            <div class="p-2 bd-highlight">                                               
-                                <p class="lh-1" >
-                                    <strong>Total:</strong> <br> {{ allEntries }}
-                                </p>    
-                            </div>
-
-                            <div class="p-2 bd-highlight w-10">                       
-                                <div class="input-group">
-                                    <span class="input-group-text icon" id="basic-addon1"><i class="fas fa-search text-white"></i></span>                     
-                                    <input type="text" v-model="searchName" class="form-control" placeholder="Search..." aria-describedby="basic-addon1"/>
-                                    <span class="clear" @click="clearSearch()"><i class="fas fa-times"></i></span>
-                                </div>                                              
-                            </div>
-                        </div>               
-
-                </section>
-                    <table class="table table-sm mt-3">
+                    <div class="sticky-top" v-if="recordsHeadingState">
+                        <RecordsHeading 
+                        :allEntries = 'allEntries'
+                        :allCustomers = 'allCustomers'
+                        />                                            
+                    </div>                                                                                        
+                    <div v-if="loading">
+                        loading...
+                    </div>
+                  
+                    <table class="table table-sm mt-3" v-else-if="result && result.entries.edges">
                         <thead>
                             <tr>    
                                 <th scope="col">S/N</th>        
@@ -45,73 +23,57 @@
                                 <th scope="col">Count</th>
                                 <th scope="col">Last Used</th>                        
                             </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(i, index) in searchedCustomers" :key="i.id">
+                        </thead>                                                                
+                                   
+                        <tbody>                                                        
+                            <tr @click="openRecordDetails(),
+                                customersId(i.node.id)" 
+                                class="t-hover" v-for="(i, index) of result.entries.edges" :key="i.node.id">
                                 <td>{{ index + 1 }}</td>
-                                <td @click= "changeStateOnce">
-                                    <router-link :to ="{name: 'RecordDetails',
-                                        params: {
-                                            id:i.id,
-                                            customerName: i.customerName,
-                                            customerContact: i.customerContact,
-                                            lastUse: i.count.length + 1,
-                                            firstRider: i.Rider.riderName,
-                                            riderId: i.Rider.id,
-                                            discount: i.discountAmount,   
-                                            dateCreated: i.dateCreated                                  
-                                        }                                
-                                    }"
-                                    >
-                                        {{ i.customerName }}
-                                    </router-link>
-                                </td>                        
-                                <td>{{ i.customerContact }}
-                                    {{ i.__typename }}
+                                <td>                                                           
+                                     {{ i.node.customerName}}                                     
                                 </td>
-                                <td> {{dateTime( i.dateCreated ) }} </td>
-                                <td>{{ i.count.length + 1 }} </td>
-                                <td v-if="i.count == '' "> 
-                                    {{ dateRange(i.dateCreated) }}                                          
+                                <td>{{ i.node.customerContact}} </td>
+                                <td> {{dateTime( i.node.dateCreated ) }} </td>
+                                <td> {{ i.node.count.length + 1}}</td>
+                                <td v-if="i.node.count == '' "> 
+                                    {{ dateRange(i.node.dateCreated) }}                                          
                                 </td>     
                                 <td v-else>
-                                    <div  v-for="items in i.count.slice(0, 1)" :key="items.id">
+                                   <span v-for="items in i.node.count.slice(0, 1)" :key="items.id">
                                         {{ dateRange(items.dateCreated) }}
-                                    </div>  
-                                </td>                                                               
-                            </tr>            
-                        </tbody>
+                                    </span>
+                                </td>
+                            </tr>                                                                     
+                            <div v-if="loading">
+                                loading...
+                            </div>                                                        
+                        </tbody>                        
                     </table>             
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="sticky-top the-details" v-if="hidePage"                                                     >
+            <div class="col-md-4">                               
+                <div class=" the-details" v-if="detailsState">                    
                     <RecordDetails
-                        :uniqueCustomers= "uniqueCustomers"
+                        :uniqueCustomers= "result"
                         :dateTime = "dateTime"       
-                        :dateRange = "dateRange"
-                        @closeDetails = 'changeState'
-                        @showEditModal = 'showEditModal'
-                        @showSection = 'showSectionOnce'
-                        @showSms = 'showSms'
-                        @showDelete = 'showDelete'
-                    />                                 
+                        :dateRange = "dateRange"                        
+                    />                                                     
                 </div>
-
             </div>    
         </div>  
-        <div class="back-drop" v-if="hideEditModal">
+        <div class="back-drop" v-if="editRecordState">
             <EditRecords 
-                :uniqueCustomers = 'uniqueCustomers'
+                :uniqueCustomers = 'result'
                 @showEditModal ='showEditModal'                
                 @showSection ='showSection'
             />
         </div>
 
-        <div class="back-drop" v-if="hideSms">
+        <div class="back-drop" v-if="smsState">
             <SingleSms
                 @showEditModal = 'showSms'
-                :uniqueCustomers = 'uniqueCustomers'
+                :uniqueCustomers = 'result'
             />
         </div>
 
@@ -128,66 +90,59 @@
 
 <script>
 import moment from 'moment'
-import  RecordDetails from '../Records/RecordsDetails.vue'
-import  EditRecords from '../Records/EditRecords.vue'
+import { useStore } from 'vuex'
+import RecordDetails from '../Records/RecordsDetails.vue'
+import EditRecords from '../Records/EditRecords.vue'
 import DeleteCustomer from '../DeleteCustomer.vue'
 import SingleSms from '../SingleSms.vue'
-import { computed, ref, toRef } from '@vue/reactivity'
+import { ENTRIES_QUERY } from '../../../graphql'
+import { useQuery } from '@vue/apollo-composable'
+import { computed, toRef} from '@vue/reactivity'
+import RecordsHeading from '../Records/RecordsHeading.vue'
+import { onUnmounted } from '@vue/runtime-core'
+//import { ref} from 'vue'
 
 export default {
     name: "recordList",
-
     components: {
         RecordDetails,
         EditRecords,
         SingleSms,
-        DeleteCustomer
+        DeleteCustomer,
+        RecordsHeading
     },
 
     props: {
         uniqueCustomers: Object,
-        multipleCustomers: Object
+        multipleCustomers: Object,        
     },
  
-    setup(props) {        
+    setup(props) {                                                   
         const allCustomers = toRef(props, 'uniqueCustomers')        
-        const multipleEntries = toRef(props, 'multipleCustomers')
+        const multipleEntries = toRef(props, 'multipleCustomers')       
+        const store = useStore()
 
-        const searchName = ref('')
-        const hidePage = ref(false)
-        const changeState = () => hidePage.value = !hidePage.value
-        const changeStateOnce = () => hidePage.value = true
-
-        const hideEditModal = ref(false)
-        const showEditModal = ()=> hideEditModal.value = !hideEditModal.value
-
-        const HideSection = ref(true)
-        const showSection = () => HideSection.value = !HideSection.value
+        //commit
+        const openRecordDetails = () => {
+            store.commit('openRecordDetails')
+        }  
         
-        const showSectionOnce = () => HideSection.value = false
+        //Send Id to store
+        const customersId = (item) => {
+            store.commit('getId', item)
+        }   
 
-        const hideDelete = ref(false)
-        const showDelete = () => hideDelete.value = !hideDelete.value
+        //State
+        const detailsState = computed(() => store.state.recordDetailsState)
+        const editRecordState = computed(() => store.state.editRecordState)                                         
+        const recordsHeadingState = computed(() => store.state.recordsHeadingState)                                         
+        const smsState = computed(() => store.state.personalSms)
 
-        const hideSms = ref(false)
-        const showSms= () => hideSms.value = !hideSms.value
-
-        const allEntries = computed(() => allCustomers.value.length + multipleEntries.value.length)                
-        const searchedCustomers = computed(() => {
-            return allCustomers.value.filter((allCustomer) => {
-                return (
-                    allCustomer.customerName
-                    .toLowerCase()
-                    .indexOf(searchName.value.toLowerCase()) != -1 ||
-                    allCustomer.customerContact
-                    .toLowerCase()
-                    .indexOf(searchName.value.toLowerCase()) != -1
-                )
-            })
+        onUnmounted(() => {
+            store.commit('closeRecordDetails')                        
         })
-        const clearSearch = () => {
-            searchName.value = ''
-        }
+
+        const allEntries = computed(() => allCustomers.value.length + multipleEntries.value.length)                                
 
         function dateTime(value) {
             return moment(value).format('DD-MM-YYYY')
@@ -195,31 +150,76 @@ export default {
 
         function dateRange(value) {
             return moment(value).fromNow()
-        }                
+        }   
         
-        return{
+        const { result, fetchMore, loading } = useQuery(ENTRIES_QUERY, () => ({
+            notifyOnNetworkStatusChange : true,
+        }))                          
+           
+        
+         function loadMore () {                                           
+            fetchMore({
+                variables: {
+                    cursor: result.value.entries.pageInfo.endCursor
+                },
+                updateQuery: (previousResult, { fetchMoreResult }) => {                    
+                    const newEdges = fetchMoreResult.entries.edges
+                    const pageInfo = fetchMoreResult.entries.pageInfo                                                                                
+                  
+                    return newEdges.length ? {                                            
+                        ...previousResult,                        
+                        entries: { 
+                            ...previousResult.entries,
+                            //concat edges
+                            edges: [                                                                
+                                ...previousResult.entries.edges,
+                                //filterOut Duplicate results from cache
+                                ...newEdges.filter(n => ! previousResult.entries.edges.some(p => p.node.id === n.node.id))                                
+                            ],
+
+                            //overide with new pageInfo
+                            pageInfo,
+                        }
+                    } : previousResult
+                },
+            })
+            }
+
+        window.addEventListener("scroll",  () => {
+            const { scrollTop, scrollHeight, clientHeight } = document.documentElement            
+            if (scrollTop + clientHeight >= scrollHeight - 5 
+                && result.value.entries.pageInfo.hasNextPage) {
+                loadMore()                
+            }            
+        }, {
+            passive: true
+        })
+        
+        return {
             dateTime,
             dateRange,
             RecordDetails,
             EditRecords,
             SingleSms,
-            DeleteCustomer,
-            searchName,
-            searchedCustomers,  
-            hidePage,          
-            changeState,
-            changeStateOnce,
-            allEntries,
-            clearSearch,
-            hideEditModal,
-            showEditModal,
-            showSection,
-            HideSection,
-            hideSms,
-            showSms,
-            showSectionOnce,
-            showDelete,
-            hideDelete
+            RecordsHeading,
+            DeleteCustomer,            
+
+            openRecordDetails,          
+            //state
+            detailsState,
+            editRecordState,
+            recordsHeadingState,
+            smsState,
+
+            customersId,            
+
+            allCustomers,
+            allEntries, 
+            
+            result,
+            loading,            
+            loadMore
+
         }
     },
 }
@@ -229,29 +229,8 @@ export default {
 .theBack {
     background-color: #ffffff;
     padding: 15px;
-    border-radius: 10px;
-}
-
-a {
-    text-decoration: none;
-}
-
- a.router-link-exact-active {    
-    color: rgb(37, 73, 190);
-    
-    font-weight: bold;       
-    text-align: center;
-}
-
-.the-section{
-    background-color: #517fbb;
-    border-radius: 20px;
-    padding: 10px;
-    height: 4.6rem;
-}
-
-.icon{
-    background-color: #6e9fdf;
+    border-radius: 10px;                      
+    min-height: 50%;
 }
 
 .clear {
@@ -272,11 +251,17 @@ a {
     left: 0px;
     bottom: 0px;
     background: rgba(0, 0, 0, 0.5);        
+    z-index: 4;
 }
 
 .the-details{
     z-index: 2;
     height: 400px;
+    position: fixed;
 }
+
+.t-hover:hover {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.0)
+} 
 
 </style>

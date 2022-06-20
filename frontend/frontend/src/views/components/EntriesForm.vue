@@ -54,6 +54,7 @@ import { useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { useStore } from 'vuex'
 import { computed, watch } from 'vue'
+import { ENTRIES_QUERY } from '../../graphql'
 
 export default {
     name: 'EntriesForm',
@@ -146,6 +147,13 @@ export default {
                         discountAmount: Discount.value,
                         dateCreated: new Date(dateCreated.value)
                     },                                           
+
+                    update: (cache, { data: { createRidersLog } }) => {                        
+                        const data = cache.readQuery({ query: ENTRIES_QUERY })
+                        console.log(data, 'daily', createRidersLog)
+                        data.paginatedEntries.edges.push(createRidersLog)
+                        cache.writeQuery({query: ENTRIES_QUERY, data })
+                    }
                 })
             )        
 

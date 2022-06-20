@@ -1,6 +1,6 @@
 <template>
     <div>
-        <button @click.self="sendEditModal()" type="button" class="btn-close close-button btn-light close-button " aria-label="Close"></button>        
+        <button @click.self="closePersonalSms()" type="button" class="btn-close close-button btn-light close-button " aria-label="Close"></button>        
 
         <div class="form-background">
             <p class="text-primary">Send SMS to this customer</p>
@@ -33,8 +33,8 @@
                 </div>
 
                 <div class="submitError" v-if="MessageError">
-                    <h6 class="text-danger"> Error ccured</h6>                            
-                    {{ MessageError }}
+                    <h6 class="text-danger"> {{ MessageError }}</h6>                            
+                   
                 </div>                 
             </form>                  
         </div>
@@ -44,10 +44,10 @@
 
 <script>
 import { computed, ref, toRef} from '@vue/reactivity'
-import { useRoute } from 'vue-router'
 import { useField, useForm } from 'vee-validate'
 import * as yup from 'yup'
 import { watch } from '@vue/runtime-core'
+import { useStore } from 'vuex'
 
 export default {
     name: 'SingleSms',
@@ -56,21 +56,27 @@ export default {
         uniqueCustomers: Object
     },
 
-    setup(props, context) {
-        const route = useRoute()
-        const GetId = computed(() => route.params.id )
+    setup(props) {        
+        const store = useStore()
+        const GetId = computed(() => store.state.customerId)
         const customerNumber = ref('')
         const getCustomerDetails = toRef(props, 'uniqueCustomers')
 
+        const closePersonalSms = () => {
+            store.commit('closePersonalSms')
+            store.commit('showRecordHeading')
+        }
+
         watch(
-            () => route.params.id,
+           GetId,
             () => { filterContact }
         )
 
-        const filterContact = computed(() => getCustomerDetails.value.filter (
-            getCustomers => getCustomers.id == GetId.value
-        ))
-        filterContact.value.forEach(element => { customerNumber.value = element.customerContact})
+        const filterContact = computed (() => getCustomerDetails.value.entries.edges.filter(
+                getCustomers => getCustomers.node.id == GetId.value
+            ))
+
+        filterContact.value.forEach(element => { customerNumber.value = element.node.customerContact})
 
         const schema = yup.object({
             Message: yup.string().required().max(200, 'Exceed message space'),
@@ -81,11 +87,7 @@ export default {
         const { handleSubmit } = useForm({
             validationSchema: schema,
         })            
-        const { value: Message, errorMessage: MessageError } = useField('Message')        
-        
-        const sendEditModal = () => {
-            context.emit('showEditModal')
-        }
+        const { value: Message, errorMessage: MessageError } = useField('Message')               
                              
         const GettingResult = ref('')
 
@@ -138,7 +140,7 @@ export default {
         })        
 
         return {
-            sendEditModal,
+            closePersonalSms,
             customerNumber,  
             onSubmit,         
             Message,

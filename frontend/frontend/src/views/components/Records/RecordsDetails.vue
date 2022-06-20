@@ -1,38 +1,41 @@
 <template>
     <aside class="shadow-sm">        
-        <button @click="sendCloseEvent()" type="button" class="btn-close btn-light close-button " aria-label="Close"></button>
+
+        <button @click="closeDetailsPage()" type="button" class="btn-close btn-light close-button " aria-label="Close"></button>
+
         <div class="d-flex flex-column bd-highlight customer-details mb-3">
-            <div class="p-2 bd-highlight" v-for="item in filterItems" :key="item.id">
-                <h5 class="cus-name">{{ item.customerName }}</h5>
-                <h6>Customer Number: <strong>{{ item.customerContact }}</strong> </h6>
-                <h6> Current Use: <strong>{{ item.count.length + 1 }}</strong> </h6>
-                <h6> First Rider: <strong> {{ item.Rider.riderName }} </strong></h6>
-                <h6>Discount: <strong> N{{ item.discountAmount }} </strong> </h6>
-            </div>
+
+            <div class="p-2 bd-highlight" v-for="item of filterCustomers" :key="item.node.id">
+                <h5 class="cus-name">{{ item.node.customerName }}</h5>
+                <h6>Customer Number: <strong>{{ item.node.customerContact }}</strong> </h6>
+                <h6> Current Use: <strong>{{ item.node.count.length + 1 }}</strong> </h6>
+                <h6> First Rider: <strong> {{ item.node.Rider.riderName }} </strong></h6>
+                <h6>Discount: <strong> N{{ item.node.discountAmount }} </strong> </h6>
+            </div> 
 
             <div class="p-2 bd-highlight">
+
                 <div class="d-flex flex-row bd-highlight justify-content-between">
-                    <div class=" bd-highlight"> 
-                        <button class="action-button btn text-white" type="button" @click="sendEditModal()">
-                            <router-link :to="{ name: 'EditRecord', params: { id: GetId }}"> 
-                                <i class="far fa-edit "></i> Edit 
-                            </router-link>
+                    <div class=" bd-highlight">                         
+                        <button v-if="candEditState" class="action-button btn text-white" type="button" @click="openEditRecordModal(), pushId(GetId), changeCanEdit()">                           
+                                <i class="far fa-edit "></i> Edit                           
+                        </button>
+
+                        <button v-else disabled class="action-button btn text-white" type="button">                           
+                                <i class="far fa-edit "></i> Editing...                     
                         </button>
                     </div>                    
-                    <div class=" bd-highlight">
-                        <button class="action-button btn text-white" type="button" @click="smsPageEvent()">
-                            <router-link :to="{ name: 'SingleSms', params: { id: GetId }}">
-                                <i class="fas fa-envelope"></i> SMS
-                            </router-link>
-                            
-                        </button>
+
+                    <div class=" bd-highlight">                        
+                        <button class="action-button btn text-white" type="button" @click="showPersonalSms">                                                        
+                                <i class="fas fa-envelope"></i> SMS                            
+                        </button>                        
                     </div>
-                    <div class=" bd-highlight">
-                        <button class="btn action-button text-white" type="button" @click="showDeletePage()">
-                            <router-link :to="{ name: 'DeleteCustomer', params: { id: GetId }}">
-                                <i class="fas fa-envelope"></i> Delete
-                            </router-link>                           
-                        </button>                          
+
+                    <div class=" bd-highlight">                        
+                        <button class="btn action-button text-white" type="button" @click="showDeletePage()">                            
+                                <i class="fas fa-envelope"></i> Delete                            
+                        </button>
                     </div>
                 </div>                    
             </div>
@@ -42,11 +45,12 @@
             </div> 
 
             <div class="p-2 bd-highlight">                
-                <div class="lastUsed" v-for="i in filterItems" :key="i.id">
-                    <p class="mt-2 fw-bold  text-white" v-if="i.count == '' ">
-                        Last Used: {{ dateRange(i.dateCreated) }}
+                <div class="lastUsed" v-for="i in filterCustomers.slice(0,1)" :key="i.id">
+                    <p class="mt-2 fw-bold  text-white" v-if="i.node.count == '' ">
+                        Last Used: {{ dateRange(i.node.dateCreated) }}
                     </p>
-                    <p class="mt-2 fw-bold text-white" v-else v-for="items in i.count.slice(0,1)" :key="items.id"> 
+                    
+                    <p class="mt-2 fw-bold text-white" v-else v-for="items in i.node.count.slice(0,1)" :key="items.id"> 
                         Last Used: {{ dateRange(items.dateCreated) }}
                     </p>
                 </div>
@@ -54,20 +58,20 @@
 
             <div class="p-2 bd-highlight">
                <div class="details-section">
-                    <table class="table text-light table-borderless">
-                        <thead v-for="i in filterItems" :key="i.id">
-                            <tr v-if="i.count == '' "> </tr>
+                    <table class="table text-light table-borderless">                        
+                        <thead v-for="i in filterCustomers" :key="i.id">
+                            <tr v-if="i.node.count == '' "> </tr>
                             <tr v-else>
                                 <th scope="col">s/n</th>
                                 <th scope="col">Date</th>
                                 <th scope="col">Rider</th>                                                                                      
                             </tr>
                         </thead>
-                        <tbody v-for="i in filterItems" :key="i.id">
-                            <div v-if="i.count == '' ">
+                        <tbody v-for="i in filterCustomers" :key="i.id">
+                            <div v-if="i.node.count == '' ">
                                 <p class="nothing">Nothing to see here</p>
                             </div>
-                            <tr v-else v-for="(items, index) in i.count" :key="items.id" class="text-light">                                
+                            <tr v-else v-for="(items, index) in i.node.count" :key="items.id" class="text-light">                                
                                 <td scope="row">{{ index + 2}}</td>
                                 <td> <small> {{ dateTime(items.dateCreated) }} </small> </td>                                                            
                                 <td> <small> {{ items.Rider.riderName}} </small> </td>                                                            
@@ -86,8 +90,8 @@
 </template>
 
 <script>
-import { computed, toRef, watch } from '@vue/runtime-core'
-import { useRoute } from 'vue-router'
+import { computed, toRef, watch } from 'vue'
+import { useStore } from 'vuex'
 
 export default {
     name: "RecordDetails",    
@@ -95,49 +99,53 @@ export default {
         uniqueCustomers: Object,
         dateTime: Function,
         dateRange: Function,
-    },
-    emits: ['closeDetails', 'showEditModal', 'showSection', 'showSms', 'showDelete'],
+        checkCustomerId: String
+    },    
 
-    setup(props, context) {
-        const route = useRoute() 
-        const GetId = computed(() => route.params.id)       
+    setup(props) {                
+        const store = useStore()
+        const GetId = computed(() => store.state.customerId)
+        const candEditState = computed(() => store.state.canEdit)        
         
-        const getCustomerDetails = toRef(props, 'uniqueCustomers')        
-        const sendCloseEvent = () => {
-            context.emit('closeDetails')
+        const getCustomerDetails = toRef(props, 'uniqueCustomers')                        
+
+        const closeDetailsPage = () => {
+            store.commit('closeRecordDetails')
         }
 
-        const sendEditModal = ()=> {
-            context.emit('showEditModal')                        
-            context.emit('showSection')
+        const openEditRecordModal = () => {
+            store.commit('openEditRecord')
         }
 
-        const smsPageEvent = () => {
-            context.emit('showSms')
-            context.emit('showSection')
+        const pushId = (id) => {
+            store.commit('getId', id)            
         }
 
-        const showDeletePage = () => {
-            context.emit('showDelete')
-            context.emit('showSection')
+        const changeCanEdit = () => {
+            store.commit('canEditCustomer')
+        }
+
+        const showPersonalSms = () => {
+            store.commit('showPersonalSms')
+            store.commit('hideRecordHeading')
         }
         
-        
-        watch(
-            () => route.params, 
-            () => { filterItems }
+        watch( GetId, 
+            () => { filterCustomers }
         )
-        const filterItems = computed (() => getCustomerDetails.value.filter(
-                getCustomers => getCustomers.id == route.params.id
-            ))        
+        const filterCustomers = computed (() => getCustomerDetails.value.entries.edges.filter(
+                getCustomers => getCustomers.node.id == GetId.value
+            ))                    
         
         return{            
-            filterItems,
-            sendCloseEvent,
-            GetId,
-            sendEditModal,           
-            smsPageEvent,                                               
-            showDeletePage
+            filterCustomers,           
+            GetId,                      
+            closeDetailsPage,
+            openEditRecordModal,
+            pushId,            
+            changeCanEdit,
+            candEditState,
+            showPersonalSms
         }
     },
 }
@@ -150,6 +158,7 @@ aside{
     height: auto;
     border-radius: 10px;
     padding: 20px;
+    width: 350px;
 }
 
 .lastUsed{
@@ -195,6 +204,12 @@ a:hover{
 
 .customer-details{
     color: #40649e;
+}
+
+.action-button {
+    background: #3160ac;
+    border-radius: 10px;
+    color: white;
 }
 
 .action-button:hover {

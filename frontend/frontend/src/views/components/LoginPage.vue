@@ -1,13 +1,13 @@
 <template>
-    <div class="container">
+    <div class="container login">
         <div class="row">
-            <div class="col-md-3">
-                <h5 class="theText1 text-start">First Laurel Logistics Services</h5>
-                <h3 class="theText text-start text-primary font-weight-bold"> Customer Tracking Page</h3>
+            <div class="col-md-3">                
+                
             </div>
             <div class="col-md-6">
                 
-                <section class="bg-light shadow-sm p-3 text-start changeFormWidth">                    
+                <section class="bg-light shadow-sm p-4 text-start changeFormWidth"> 
+                    <h1 class="theText text-center text-primary font-weight-bold mt-4"> C-Track</h1>                   
                     <p v-for="err in error" :key="err.code" class="text-danger">
                         {{ err.message}}
                     </p>
@@ -20,7 +20,9 @@
                             <label for="InputPassword1" class="form-label theText">Password</label>
                             <input type="password" class="form-control" v-model="password" id="InputPassword1">
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">Submit</button>
+                        <button type="submit" class="btn btn-primary w-100 mb-4">Login</button>
+
+                        <p class="text-end">Forgot password? <span>Recover</span></p>
                     </form>                    
                 </section>
             </div>
@@ -56,7 +58,7 @@ export default {
 
     function redirectToDashboard() {
         router.push({
-            name: 'Dashboard',
+            path: '/dashboard/records',
         })
     }
     function redirectTologin() {
@@ -66,8 +68,13 @@ export default {
     }
 
     onMounted(() => {
-        if (getState.value.status) {
+        console.log('GetState',getState.value.status.loggedIn)
+        if (getState.value.status.loggedIn) {
             redirectToDashboard() 
+        }
+
+        else {
+            redirectTologin()
         }
     })
     
@@ -89,6 +96,7 @@ export default {
                 password: password.value
             },
             update: (cache, { data }) => {
+                console.log('Dara',data)
                 if (!data.tokenAuth.errors){
                     localStorage.setItem("token", data.tokenAuth.token)
                     logInUser()      
@@ -135,5 +143,10 @@ export default {
     width: 70%;
     margin-right: auto;
     margin-left: auto;
+}
+
+
+.login{
+    margin-top: 10%;
 }
 </style>
