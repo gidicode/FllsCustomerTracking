@@ -90,11 +90,9 @@ export default {
         //looping to get the instance of the filtered customers and send to customerInstance
          filterCustomersToEdit.value.forEach(element => { customerInstance.value = element})        
 
- 
         //Customer Instance
         const customerNames = computed(() => customerInstance.value.node.customerName)
-        const customerContacts = computed(() => customerInstance.value.node.customerContact)
-        //leaving selectRiders so that i can ACCESS other values
+        const customerContacts = computed(() => customerInstance.value.node.customerContact)        
         const selectRiders = computed(() => customerInstance.value.node.Rider.riderName)             
         //setting default rider Id if no option is selected
         const riderId = computed(() => customerInstance.value.node.Rider.id)

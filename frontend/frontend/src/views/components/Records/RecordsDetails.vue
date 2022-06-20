@@ -27,7 +27,7 @@
                     </div>                    
 
                     <div class=" bd-highlight">                        
-                        <button class="action-button btn text-white" type="button" @click="showPersonalSms">                                                        
+                        <button class="action-button btn text-white" type="button" @click="showPersonalSms()">                                                        
                                 <i class="fas fa-envelope"></i> SMS                            
                         </button>                        
                     </div>
@@ -129,6 +129,10 @@ export default {
             store.commit('showPersonalSms')
             store.commit('hideRecordHeading')
         }
+
+        const showDeletePage = () => {
+            store.commit('showDeletePage')
+        }
         
         watch( GetId, 
             () => { filterCustomers }
@@ -145,7 +149,8 @@ export default {
             pushId,            
             changeCanEdit,
             candEditState,
-            showPersonalSms
+            showPersonalSms,
+            showDeletePage,
         }
     },
 }

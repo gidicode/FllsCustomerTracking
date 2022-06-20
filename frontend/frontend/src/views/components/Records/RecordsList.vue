@@ -28,7 +28,7 @@
                         <tbody>                                                        
                             <tr @click="openRecordDetails(),
                                 customersId(i.node.id)" 
-                                class="t-hover" v-for="(i, index) of result.entries.edges" :key="i.node.id">
+                                class="t-hover" v-for="(i, index) of allCustomers" :key="i.node.id">
                                 <td>{{ index + 1 }}</td>
                                 <td>                                                           
                                      {{ i.node.customerName}}                                     
@@ -64,25 +64,20 @@
         </div>  
         <div class="back-drop" v-if="editRecordState">
             <EditRecords 
-                :uniqueCustomers = 'result'
-                @showEditModal ='showEditModal'                
-                @showSection ='showSection'
+                :uniqueCustomers = 'result'               
             />
         </div>
 
         <div class="back-drop" v-if="smsState">
             <SingleSms
-                @showEditModal = 'showSms'
                 :uniqueCustomers = 'result'
             />
         </div>
 
-        <div class="back-drop" v-if="hideDelete">
+        <div class="back-drop" v-if="deletePageState">
             <DeleteCustomer
-                :uniqueCustomers = 'uniqueCustomers'
-                @showDelete = 'showDelete'
-            />
-            <h5>gello</h5>
+                :uniqueCustomers = 'result'                
+            />            
         </div>
         
     </div>
@@ -97,10 +92,10 @@ import DeleteCustomer from '../DeleteCustomer.vue'
 import SingleSms from '../SingleSms.vue'
 import { ENTRIES_QUERY } from '../../../graphql'
 import { useQuery } from '@vue/apollo-composable'
-import { computed, toRef} from '@vue/reactivity'
+import { computed } from 'vue'
 import RecordsHeading from '../Records/RecordsHeading.vue'
 import { onUnmounted } from '@vue/runtime-core'
-//import { ref} from 'vue'
+//import { watch } from 'vue'
 
 export default {
     name: "recordList",
@@ -112,14 +107,14 @@ export default {
         RecordsHeading
     },
 
-    props: {
+    /*props: {
         uniqueCustomers: Object,
         multipleCustomers: Object,        
-    },
+    },*/
  
-    setup(props) {                                                   
-        const allCustomers = toRef(props, 'uniqueCustomers')        
-        const multipleEntries = toRef(props, 'multipleCustomers')       
+    setup() {                                                   
+        /*const allCustomers = toRef(props, 'uniqueCustomers')        
+        const multipleEntries = toRef(props, 'multipleCustomers')       */
         const store = useStore()
 
         //commit
@@ -130,19 +125,20 @@ export default {
         //Send Id to store
         const customersId = (item) => {
             store.commit('getId', item)
-        }   
+        }                   
 
         //State
         const detailsState = computed(() => store.state.recordDetailsState)
         const editRecordState = computed(() => store.state.editRecordState)                                         
         const recordsHeadingState = computed(() => store.state.recordsHeadingState)                                         
         const smsState = computed(() => store.state.personalSms)
+        const deletePageState = computed(() => store.state.deletePageState)
 
         onUnmounted(() => {
             store.commit('closeRecordDetails')                        
         })
 
-        const allEntries = computed(() => allCustomers.value.length + multipleEntries.value.length)                                
+        //const allEntries = computed(() => allCustomers.value.length + multipleEntries.value.length)                                
 
         function dateTime(value) {
             return moment(value).format('DD-MM-YYYY')
@@ -152,11 +148,10 @@ export default {
             return moment(value).fromNow()
         }   
         
-        const { result, fetchMore, loading } = useQuery(ENTRIES_QUERY, () => ({
-            notifyOnNetworkStatusChange : true,
-        }))                          
-           
-        
+        const { result, fetchMore, loading} = useQuery(ENTRIES_QUERY)                          
+
+        const allCustomers = computed(() => result.value?.entries.edges ?? [])    	        
+
          function loadMore () {                                           
             fetchMore({
                 variables: {
@@ -171,7 +166,7 @@ export default {
                         entries: { 
                             ...previousResult.entries,
                             //concat edges
-                            edges: [                                                                
+                        edges: [                                                                
                                 ...previousResult.entries.edges,
                                 //filterOut Duplicate results from cache
                                 ...newEdges.filter(n => ! previousResult.entries.edges.some(p => p.node.id === n.node.id))                                
@@ -210,11 +205,12 @@ export default {
             editRecordState,
             recordsHeadingState,
             smsState,
+            deletePageState,
 
             customersId,            
 
             allCustomers,
-            allEntries, 
+            //allEntries, 
             
             result,
             loading,            

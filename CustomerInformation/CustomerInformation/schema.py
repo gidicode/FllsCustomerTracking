@@ -1,3 +1,5 @@
+from math import fabs
+from pyexpat import model
 from tokenize import String
 import graphene
 from graphene_django import DjangoObjectType
@@ -30,6 +32,13 @@ class MultipleEntriesType(DjangoObjectType):
     class Meta:
         model = MultipleEntries
 #relay
+
+""""class MultipleEntryNode(DjangoObjectType):
+    class Meta:
+        model = MultipleEntries
+        filter_fields = ['customer_contact', 'customer']
+        interfaces = ( graphene.relay.Node, )"""
+
 class EntryNode(DjangoObjectType):
     class Meta:
         model = Riders_Log
@@ -46,6 +55,8 @@ class Query(graphene.ObjectType):
     entriesTodayMultiple = graphene.List(MultipleEntriesType)
     entry = graphene.relay.Node.Field(EntryNode)
     entries = DjangoFilterConnectionField(EntryNode)
+    #multiples = graphene.relay.Node.Field(MultipleEntryNode)
+    #multiplesNode = DjangoFilterConnectionField(MultipleEntryNode)
 
     def resolve_ridersList(root, info):
         return Riders.objects.all()   
@@ -110,54 +121,61 @@ class CreateUser(graphene.Mutation):
         )
         return CreateUser(user = user)
 
-class CreateRidersLog(graphene.Mutation):
-    class Arguments:
+class CreateRidersLog(relay.ClientIDMutation):
+    
+    class Input:
         id = graphene.ID()
         customer_name = graphene.String()
-        customer_contact = graphene.String()
-        rider = graphene.Int(name="rider")
-        discount_amount = graphene.Int()
-        date_created = graphene.types.DateTime()
+        customer_contact = graphene.String( required = True)
+        rider = graphene.Int(name="rider", required = True)
+        discount_amount = graphene.String()
+        date_created = graphene.types.DateTime(required = True)
     
-    riders_log = graphene.Field(Riders_LogType)
+    riders_log = graphene.Field(EntryNode)    
+    multiple_log = graphene.Field(MultipleEntriesType)
 
     @classmethod
-    def mutate(root, info, id, customer_name, 
-        customer_contact, rider, discount_amount,
-        date_created):
+    def mutate_and_get_payload(cls, root, info, **input):                
+        print(input)         
+        customer_contact = input.get('customer_contact')
+        customer_name = input.get('customer_name')
+        discount_amount = input.get('discount_amount')
+        date_created = input.get('date_created')
+        rider = input.get('rider')
 
-        def CreateEntries():
-            check_for_contact = Riders_Log.objects.filter(customer_contact = customer_contact).exists()
-            if check_for_contact == False:
-                log = Riders_Log.objects.create(
-                    customer_name = customer_name,
-                    customer_contact = customer_contact,                    
-                    discount_amount = discount_amount, 
-                    date_created = date_created
-                )
-                
-                if rider is not None:
-                    rider_object = Riders.objects.get(pk = rider)
-                log.Rider = rider_object
-                log.save()
-            else:                     
-                multiple_log = MultipleEntries.objects.create(                    
-                    customer_contact = customer_contact,                    
-                    discount_amount = discount_amount,
-                    date_created = date_created,
-                )
+        check_for_contact = Riders_Log.objects.filter(customer_contact = customer_contact).exists()
+        #global riders_log
+        if check_for_contact == False:                        
+            riders_log = Riders_Log.objects.create(
+                customer_name = customer_name,
+                customer_contact = customer_contact,                    
+                discount_amount = discount_amount, 
+                date_created = date_created
+            )
+            
+            if input.get('rider') is not None:
+                rider_object = Riders.objects.get(pk = rider)
+            riders_log.Rider = rider_object
+            #riders_log.save()
+            return CreateRidersLog(  riders_log = riders_log) 
+        if check_for_contact == True :            
+            multiple_log = MultipleEntries.objects.create(                    
+                customer_contact = customer_contact,
+                discount_amount = discount_amount,
+                date_created = date_created,
+            )            
 
-                if rider is not None:
-                    rider_object2 = Riders.objects.get(pk = rider)
-                customer = Riders_Log.objects.get(customer_contact = customer_contact)                
-                multiple_log.customer = customer
-                multiple_log.Rider = rider_object2
-                multiple_log.save()
-                
-                get_the_riders_log = Riders_Log.objects.get(customer_contact = customer_contact)          
-                get_the_riders_log.count.add(multiple_log)
+            if input.get('rider') is not None:
+                rider_object2 = Riders.objects.get(pk = rider)
+            customer = Riders_Log.objects.get(customer_contact = customer_contact)                
+            multiple_log.customer = customer
+            multiple_log.Rider = rider_object2
+           # multiple_log.save()
+            
+            get_the_riders_log = Riders_Log.objects.get(customer_contact = customer_contact)          
+            get_the_riders_log.count.add(multiple_log)            
 
-        return CreateRidersLog(riders_log = CreateEntries())
+            return CreateRidersLog(multiple_log = multiple_log) 
 
 class EditRidersLog(relay.ClientIDMutation):
     class Input:
@@ -192,25 +210,27 @@ class DeleteRidersLog(relay.ClientIDMutation):
     class Input:
         id = graphene.ID()
 
-    delete_log = graphene.Field(EntryNode)    
+    delete_log = graphene.Field(EntryNode)        
 
     @classmethod  
-    def mutate_and_get_payload(cls, root, info, **input):  
-        id = input.get('id')
+    def mutate_and_get_payload(cls, root, info, **input):          
+        id = input.get('id')        
 
-        delete_log = Riders_Log.objects.get(pk= from_global_id(id)[1])        
+        delete_log = Riders_Log.objects.get(pk = from_global_id(id)[1])        
+        print("delete log:",delete_log)
         delete_log.delete()        
 
-        #return DeleteRidersLog( delete_log = delete_log )
+        return DeleteRidersLog( delete_log = delete_log )
+
 class RelayMutation(graphene.AbstractType):
     edit_riders_log2 = EditRidersLog.Field()
+    deleteRidersLog2 = DeleteRidersLog.Field()
+    createRidersLog2 = CreateRidersLog.Field()
 
 class Mutation(AuthMutation, RelayMutation, graphene.ObjectType):
     addRiders = AddRiders.Field()
-    createUser = CreateUser.Field()
-    createRidersLog = CreateRidersLog.Field()
+    createUser = CreateUser.Field()    
     editRidersLog = EditRidersLog.Field()
     deleteRidersLog = DeleteRidersLog.Field()
-
 
 schema = graphene.Schema(query=Query, mutation = Mutation)

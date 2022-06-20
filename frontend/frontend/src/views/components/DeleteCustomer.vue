@@ -14,11 +14,11 @@
                 <h5 class="text-danger">opps, something wrong happened</h5>
             </div>
             <h6 class="ques-text" v-if="hideText"> Are you sure you want to delete this customer record? </h6>
-            <p class="details" v-if="hideText">{{ CustomerDetails.customerName }}, {{ CustomerDetails.customerContact }}, {{ CustomerDetails.Rider.riderName}}</p>
+            <p class="details" v-if="hideText">{{ CustomerDetails.node.customerName }}, {{ CustomerDetails.node.customerContact }},</p>
 
             <div class="d-grid gap-2 col-8 mx-auto">                
                 <button class="btn btn-danger" type="button" v-if="hideText" @click="deleteRecord()" > Delete</button>
-                <button class="btn btn-outline-primary" type="button" @click="closeModal()" >Close</button>
+                <button class="btn btn-outline-primary" type="button" @click="closeDeletePage()" >Close</button>
             </div>
         </div>
     </div>
@@ -27,43 +27,42 @@
 <script>
 
 import { computed, toRef, ref, watch } from '@vue/runtime-core'
-import { useRoute } from 'vue-router'
+import { useStore } from 'vuex'
 import { useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 
 export default {
-
-    name: 'DeleteCustomer',
-    emits: ['showDelete'],
+    name: 'DeleteCustomer',    
     props: { uniqueCustomers : Object},
 
-    setup(props, context) {
-        const route = useRoute() 
-        const GetId = computed(() => route.params.id )
+    setup(props) {    
+        const store = useStore()
+        const GetId = computed(() => store.state.customerId)        
         const getCustomerDetails = toRef(props, 'uniqueCustomers')
         const CustomerDetails = ref({})
         const deleted = ref(false)
         const hideText = ref(true)
         
-        watch(
-            () => route.params.id,
+        const closeDeletePage = () => {
+            store.commit('closeDeletePage')
+        }
+        
+        watch(GetId,
             () => { filterItems }
         )
 
-        const filterItems = computed(() => getCustomerDetails.value.filter(
-            getCustomers => getCustomers.id == GetId.value
+        const filterItems = computed(() => getCustomerDetails.value.entries.edges.filter(
+            getCustomers => getCustomers.node.id == GetId.value
         ))
         filterItems.value.forEach(element => {
             CustomerDetails.value = element
         });
-
-        const closeModal = () => {
-            context.emit('showDelete')
-        }
-
+        
         const { mutate: deleteRecord, error:ErrorMessage, onDone, loading} = useMutation(gql`
-            mutation deleteRidersLog($id:ID!){
-             deleteRidersLog( id: $id 
+            mutation deleteRidersLog2($id:ID!){
+             deleteRidersLog2( input : {
+                id: $id
+             }
              ){ 
                 deleteLog {
                     id
@@ -77,17 +76,16 @@ export default {
         onDone(() => {
             deleted.value = true
             hideText.value = false
-        })      
-        
+        })
 
-        return {
-            closeModal,
+        return {            
             CustomerDetails,
             deleteRecord,
             ErrorMessage,
             loading,
             deleted,
-            hideText
+            hideText,
+            closeDeletePage,
         }
         
     },

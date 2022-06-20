@@ -111,20 +111,21 @@ export default {
                 onDone, 
                 error: ErrorMessage,
                 loading } = useMutation(gql`
-                    mutation createRidersLog(                        
+                    mutation createRidersLog2(                        
                         $customerName:String!, 
                         $customerContact: String!,
                         $rider:Int!,
-                        $discountAmount: Int!,
+                        $discountAmount: String!,
                         $dateCreated: DateTime! 
                     ){
-                        createRidersLog (
+                        createRidersLog2 ( input: {
                         customerName: $customerName,
                         customerContact: $customerContact,
                         rider: $rider,
                         discountAmount: $discountAmount,
                         dateCreated: $dateCreated,
-                        ) {
+                        }
+                        ){
                             ridersLog {
                                 id
                                 customerName
@@ -148,12 +149,24 @@ export default {
                         dateCreated: new Date(dateCreated.value)
                     },                                           
 
-                    update: (cache, { data: { createRidersLog } }) => {                        
-                        const data = cache.readQuery({ query: ENTRIES_QUERY })
-                        console.log(data, 'daily', createRidersLog)
-                        data.paginatedEntries.edges.push(createRidersLog)
-                        cache.writeQuery({query: ENTRIES_QUERY, data })
-                    }
+                    update: (cache, { data: { createRidersLog2 } }) => {                        
+                        let data = cache.readQuery({ query: ENTRIES_QUERY })
+                        data = {
+                                ...data,
+                                edges: [  
+                                    ...data.entries.edges, 
+                                    createRidersLog2
+                                ]                         
+                            } 
+                        
+                        console.log({}, 'daily', createRidersLog2)
+                        
+                        cache.writeQuery({ query: ENTRIES_QUERY, data })                                               
+                    },          
+
+                   refetchQueries: [
+                    {query: ENTRIES_QUERY}
+                   ]
                 })
             )        
 

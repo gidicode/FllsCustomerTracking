@@ -16,6 +16,7 @@ const store = createStore({
            personalSms:false,
            customerId: '',           
            canEdit: true,
+           deletePageState: false,
         }
     },
 
@@ -93,6 +94,14 @@ const store = createStore({
 
         closePersonalSms (state) {
             state.personalSms = false
+        },
+
+        showDeletePage(state) {
+            state.deletePageState = true
+        },
+
+        closeDeletePage(state) {
+            state.deletePageState = false
         }
         
     }
