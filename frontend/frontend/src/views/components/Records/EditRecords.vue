@@ -1,5 +1,5 @@
 <template>
-    <div class="back-drop shadow mb-3" >        
+    <div class="shadow mb-3" >        
 
         <button @click.self="hideEditModal()" type="button" class="btn-close close-button btn-light close-button " aria-label="Close"></button>        
 
@@ -86,7 +86,7 @@ export default {
         const filterCustomersToEdit = computed (() => getCustomerDetails.value.entries.edges.filter(
             getCustomers => getCustomers.node.id == customerId.value
         ))
-        const customerInstance = ref({})
+        const customerInstance = ref(null)
         //looping to get the instance of the filtered customers and send to customerInstance
          filterCustomersToEdit.value.forEach(element => { customerInstance.value = element})        
 
@@ -104,9 +104,7 @@ export default {
         const customerName = ref(customerNames.value)
         const customerContact = ref(customerContacts.value)
         const selectRider = ref(selectRiders.value)
-        const theDate = ref(theDates.value)
-
-        console.log("select", riderId.value)
+        const theDate = ref(theDates.value)        
 
         //Getting list of riders to choose from
         const getRiders = computed(() => GetRiders.value)   

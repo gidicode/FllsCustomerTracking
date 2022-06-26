@@ -14,7 +14,6 @@
             </div> 
 
             <div class="p-2 bd-highlight">
-
                 <div class="d-flex flex-row bd-highlight justify-content-between">
                     <div class=" bd-highlight">                         
                         <button v-if="candEditState" class="action-button btn text-white" type="button" @click="openEditRecordModal(), pushId(GetId), changeCanEdit()">                           
@@ -55,7 +54,8 @@
                     </p>
                 </div>
             </div>
-
+            {{ getMultipleId }}
+            {{multipleState}}
             <div class="p-2 bd-highlight">
                <div class="details-section">
                     <table class="table text-light table-borderless">                        
@@ -74,7 +74,8 @@
                             <tr v-else v-for="(items, index) in i.node.count" :key="items.id" class="text-light">                                
                                 <td scope="row">{{ index + 2}}</td>
                                 <td> <small> {{ dateTime(items.dateCreated) }} </small> </td>                                                            
-                                <td> <small> {{ items.Rider.riderName}} </small> </td>                                                            
+                                <td> <small> {{ items.Rider.riderName}} </small> </td>
+                                <td @click="pushMultipleId(items.id), changeMultipleState()"> <small> Edit </small> </td>
                             </tr>                           
                         </tbody>
                     </table>
@@ -105,34 +106,22 @@ export default {
     setup(props) {                
         const store = useStore()
         const GetId = computed(() => store.state.customerId)
-        const candEditState = computed(() => store.state.canEdit)        
+        const getMultipleId = computed(() => store.state.multipleId)
+        const candEditState = computed(() => store.state.canEdit)   
+        const multipleState = computed(() => store.state.editMultipleState)     
         
         const getCustomerDetails = toRef(props, 'uniqueCustomers')                        
-
-        const closeDetailsPage = () => {
-            store.commit('closeRecordDetails')
-        }
-
-        const openEditRecordModal = () => {
-            store.commit('openEditRecord')
-        }
-
-        const pushId = (id) => {
-            store.commit('getId', id)            
-        }
-
-        const changeCanEdit = () => {
-            store.commit('canEditCustomer')
-        }
-
+        const closeDetailsPage = () => store.commit('closeRecordDetails')
+        const openEditRecordModal = () => store.commit('openEditRecord')
+        const pushId = (id) => store.commit('getId', id)
+        const pushMultipleId = (id) => store.commit('getMultipleId', id)
+        const changeCanEdit = () => store.commit('canEditCustomer')
         const showPersonalSms = () => {
             store.commit('showPersonalSms')
             store.commit('hideRecordHeading')
         }
-
-        const showDeletePage = () => {
-            store.commit('showDeletePage')
-        }
+        const showDeletePage = () => store.commit('showDeletePage')
+        const changeMultipleState = () => store.commit('openEditMultiple')
         
         watch( GetId, 
             () => { filterCustomers }
@@ -146,11 +135,15 @@ export default {
             GetId,                      
             closeDetailsPage,
             openEditRecordModal,
-            pushId,            
+            pushId,        
+            pushMultipleId,    
             changeCanEdit,
             candEditState,
             showPersonalSms,
             showDeletePage,
+            getMultipleId,
+            changeMultipleState,
+            multipleState,
         }
     },
 }

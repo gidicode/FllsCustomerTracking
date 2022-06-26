@@ -50,7 +50,7 @@
 <script>
 import { useField, useForm } from 'vee-validate'
 import * as yup from 'yup'
-import { useMutation } from '@vue/apollo-composable'
+import { useMutation, useQuery } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
 import { useStore } from 'vuex'
 import { computed, watch } from 'vue'
@@ -72,6 +72,9 @@ export default {
             dateCreated: yup.date(),
             selectRider: yup.number().positive().integer(),
         })
+
+        //Initalizing the cache
+        const { result } = useQuery(ENTRIES_QUERY)  
         
         useForm({ 
             validationSchema: schema,
@@ -157,16 +160,13 @@ export default {
                                     ...data.entries.edges, 
                                     createRidersLog2
                                 ]                         
-                            } 
-                        
-                        console.log({}, 'daily', createRidersLog2)
-                        
+                            }                                                
                         cache.writeQuery({ query: ENTRIES_QUERY, data })                                               
                     },          
 
                    refetchQueries: [
                     {query: ENTRIES_QUERY}
-                   ]
+                   ],
                 })
             )        
 
@@ -184,7 +184,8 @@ export default {
             Discount,
             selectRider,
             dateCreated,
-            searchNamess
+            searchNamess,
+            result
         }  
     },   
 }

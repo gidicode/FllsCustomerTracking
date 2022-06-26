@@ -47,9 +47,8 @@ export default {
 
 <style scoped>
 .the-section{
-    background-color: #517fbb;
-    border-radius: 20px;
-    padding: 10px;
+    background-color: rgb(16, 0, 61);    
+    padding: 15px;
     height: 4.6rem;
 }
 

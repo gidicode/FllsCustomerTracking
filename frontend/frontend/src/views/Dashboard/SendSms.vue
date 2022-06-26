@@ -119,7 +119,7 @@
                                             type="checkbox" 
                                             :value="item.customerContact" 
                                             :id="item.id"
-                                            v-model="checkedNames" >                                        
+                                            v-model="checkedNames">                                        
                                     </div>
                                 </td>
                             </tr>                        

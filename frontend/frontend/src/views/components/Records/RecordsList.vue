@@ -3,19 +3,37 @@
         <div class="row">
             <div class="col-md-8">
                 <div class="theBack">        
-                    <div class="sticky-top" v-if="recordsHeadingState">
+                    <div class="sticky-top d-heading" 
+                        v-if="recordsHeadingState">
                         <RecordsHeading 
                         :allEntries = 'allEntries'
                         :allCustomers = 'allCustomers'
                         />                                            
-                    </div>                                                                                        
+                    
+                        <p 
+                            class="text-primary mt-2" 
+                            @click="bulkDeleteStateShow"
+                            v-if="!bulkDelete">
+                                Delete
+                        </p> 
+                        
+                        <button 
+                            class="btn btn-sm btn-outline-primary mt-2 " 
+                            @click="bulkDeleteStateHide" 
+                            v-if="bulkDelete"> 
+                                Abort Delete
+                        </button>                        
+                    </div>                                                                                                            
+
                     <div v-if="loading">
                         loading...
-                    </div>
+                    </div>                                        
                   
-                    <table class="table table-sm mt-3" v-else-if="result && result.entries.edges">
+                    <table class="table table-sm" v-else-if="result && result.entries.edges">                        
+
                         <thead>
                             <tr>    
+                                <th scope="col" v-if="bulkDelete">Select</th>  
                                 <th scope="col">S/N</th>        
                                 <th scope="col">Name</th>
                                 <th scope="col">Number</th>
@@ -26,11 +44,21 @@
                         </thead>                                                                
                                    
                         <tbody>                                                        
-                            <tr @click="openRecordDetails(),
-                                customersId(i.node.id)" 
+                            <tr @click="customersId(i.node.id)" 
                                 class="t-hover" v-for="(i, index) of allCustomers" :key="i.node.id">
+                                <td v-if="bulkDelete">                                                               
+                                    <div class="form-check">
+                                        <input                                             
+                                            class="form-check-input" 
+                                            type="checkbox" 
+                                            v-model="check"
+                                            :value="{name:i.node.customerName, id: i.node.id }"                                            
+                                            :id="i.node.id"
+                                             >                                        
+                                    </div>
+                                </td>
                                 <td>{{ index + 1 }}</td>
-                                <td>                                                           
+                                <td @click="openRecordDetails()">                                                           
                                      {{ i.node.customerName}}                                     
                                 </td>
                                 <td>{{ i.node.customerContact}} </td>
@@ -41,45 +69,51 @@
                                 </td>     
                                 <td v-else>
                                    <span v-for="items in i.node.count.slice(0, 1)" :key="items.id">
-                                        {{ dateRange(items.dateCreated) }}
+                                       {{ dateRange(items.dateCreated) }}
                                     </span>
                                 </td>
-                            </tr>                                                                     
-                            <div v-if="loading">
-                                loading...
-                            </div>                                                        
+                            </tr>                                                                                                                                                        
                         </tbody>                        
                     </table>             
                 </div>
             </div>
-            <div class="col-md-4">                               
-                <div class=" the-details" v-if="detailsState">                    
+            <div class="col-md-4">                 
+                <aside class="sticky-top" v-if="bulkDelete">
+                    <BulkDelete
+                    :deleteList ='check'
+                    @after-delete='clearCheck'
+                    />
+                </aside>
+
+                <aside class="sticky-top the-details" v-if="detailsState">                    
                     <RecordDetails
                         :uniqueCustomers= "result"
                         :dateTime = "dateTime"       
                         :dateRange = "dateRange"                        
                     />                                                     
-                </div>
+                </aside>
+
+                <aside class="back-drop" v-if="editRecordState">
+                    <EditRecords 
+                    :uniqueCustomers = 'result'/>
+                </aside>
+
+                <aside class="back-drop" v-if="smsState">
+                    <SingleSms
+                    :uniqueCustomers = 'result'/>
+                </aside>
+
+                <aside class="back-drop" v-if="deletePageState">
+                    <DeleteCustomer
+                    :uniqueCustomers = 'result'/>
+                </aside>
+
+                <aside class="back-drop" v-if="editMutiple">
+                    <editMultipleRecord 
+                    :multipleCustomers = 'result'/>
+                </aside>
             </div>    
-        </div>  
-        <div class="back-drop" v-if="editRecordState">
-            <EditRecords 
-                :uniqueCustomers = 'result'               
-            />
-        </div>
-
-        <div class="back-drop" v-if="smsState">
-            <SingleSms
-                :uniqueCustomers = 'result'
-            />
-        </div>
-
-        <div class="back-drop" v-if="deletePageState">
-            <DeleteCustomer
-                :uniqueCustomers = 'result'                
-            />            
-        </div>
-        
+        </div>                                  
     </div>
 </template>
 
@@ -90,12 +124,13 @@ import RecordDetails from '../Records/RecordsDetails.vue'
 import EditRecords from '../Records/EditRecords.vue'
 import DeleteCustomer from '../DeleteCustomer.vue'
 import SingleSms from '../SingleSms.vue'
+import BulkDelete from '../BulkDelete.vue'
+import editMultipleRecord from '../Records/editMultipleRecord.vue'
 import { ENTRIES_QUERY } from '../../../graphql'
 import { useQuery } from '@vue/apollo-composable'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import RecordsHeading from '../Records/RecordsHeading.vue'
-import { onUnmounted } from '@vue/runtime-core'
-//import { watch } from 'vue'
+import { onUnmounted,  } from '@vue/runtime-core'
 
 export default {
     name: "recordList",
@@ -104,13 +139,14 @@ export default {
         EditRecords,
         SingleSms,
         DeleteCustomer,
-        RecordsHeading
-    },
+        RecordsHeading,
+        BulkDelete,
+        editMultipleRecord
+    },    
 
-    /*props: {
-        uniqueCustomers: Object,
-        multipleCustomers: Object,        
-    },*/
+    props: {      
+        multipleCustomers: Object,
+    },
  
     setup() {                                                   
         /*const allCustomers = toRef(props, 'uniqueCustomers')        
@@ -120,12 +156,13 @@ export default {
         //commit
         const openRecordDetails = () => {
             store.commit('openRecordDetails')
-        }  
+        }          
         
         //Send Id to store
         const customersId = (item) => {
             store.commit('getId', item)
-        }                   
+        }                 
+        
 
         //State
         const detailsState = computed(() => store.state.recordDetailsState)
@@ -133,10 +170,27 @@ export default {
         const recordsHeadingState = computed(() => store.state.recordsHeadingState)                                         
         const smsState = computed(() => store.state.personalSms)
         const deletePageState = computed(() => store.state.deletePageState)
+        const editMutiple = computed(() => store.state.editMultipleState)
 
         onUnmounted(() => {
             store.commit('closeRecordDetails')                        
         })
+
+        const bulkDelete = ref(false)
+        const bulkDeleteStateShow = () => bulkDelete.value = true
+        const bulkDeleteStateHide = () => {
+                bulkDelete.value = false
+                check.value = []
+            }
+        const check = ref([])        
+
+        const clearCheck = () => check.value = []
+        //const deleteItemsId = ([])        
+
+        //send Deleted Customers to store
+        //const sendDeleteList = (items) => {
+        //    store.commit('deleteItemsList', items)
+        //}
 
         //const allEntries = computed(() => allCustomers.value.length + multipleEntries.value.length)                                
 
@@ -197,7 +251,8 @@ export default {
             EditRecords,
             SingleSms,
             RecordsHeading,
-            DeleteCustomer,            
+            DeleteCustomer,   
+            editMultipleRecord,
 
             openRecordDetails,          
             //state
@@ -214,7 +269,17 @@ export default {
             
             result,
             loading,            
-            loadMore
+            loadMore,
+
+            check,
+            bulkDelete,
+            bulkDeleteStateShow,
+            bulkDeleteStateHide,
+
+            //emitt
+            clearCheck,
+
+            editMutiple
 
         }
     },
@@ -224,8 +289,7 @@ export default {
 <style scoped>
 .theBack {
     background-color: #ffffff;
-    padding: 15px;
-    border-radius: 10px;                      
+    padding: 30px;                         
     min-height: 50%;
 }
 
@@ -260,4 +324,7 @@ export default {
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.0)
 } 
 
+.d-heading{
+    z-index: 1;
+}
 </style>

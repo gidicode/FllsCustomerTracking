@@ -30,6 +30,7 @@ import { computed, toRef, ref, watch } from '@vue/runtime-core'
 import { useStore } from 'vuex'
 import { useMutation } from '@vue/apollo-composable'
 import gql from 'graphql-tag'
+import { ENTRIES_QUERY } from '../../graphql'
 
 export default {
     name: 'DeleteCustomer',    
@@ -70,7 +71,10 @@ export default {
                 }
             }
         `, () => ({
-            variables: { id: GetId.value}
+            variables: { id: GetId.value},
+            refetchQueries: [
+                {query: ENTRIES_QUERY}
+            ]
         }))
 
         onDone(() => {
@@ -96,7 +100,7 @@ export default {
  .delete-section {
      width: 50%;
      background-color: rgb(255, 255, 255);
-     margin-left: 10%;
+     margin-left: auto;
      margin-right: auto;
      height: inherit;
      padding: 20px;     

@@ -13,10 +13,12 @@ const store = createStore({
            recordDetailsState: false,
            recordsHeadingState: true,
            editRecordState: false,
+           editMultipleState: false,
            personalSms:false,
            customerId: '',           
+           multipleId:'',
            canEdit: true,
-           deletePageState: false,
+           deletePageState: false,           
         }
     },
 
@@ -63,7 +65,6 @@ const store = createStore({
         openRecordDetails (state) {
             state.recordDetailsState = true
         },
-
         closeRecordDetails (state) {
             state.recordDetailsState = false
         },
@@ -76,10 +77,13 @@ const store = createStore({
             state.customerId = payload
         },
 
+        getMultipleId( state, payload) {
+            state.multipleId = payload
+        },
+
         hideRecordHeading (state) {
             state.recordsHeadingState = false
         },
-
         showRecordHeading (state) {
             state.recordsHeadingState = true
         },
@@ -91,7 +95,6 @@ const store = createStore({
         showPersonalSms (state) {
             state.personalSms = true
         },
-
         closePersonalSms (state) {
             state.personalSms = false
         },
@@ -99,10 +102,17 @@ const store = createStore({
         showDeletePage(state) {
             state.deletePageState = true
         },
-
         closeDeletePage(state) {
             state.deletePageState = false
-        }
+        },  
+        
+        openEditMultiple(state) {
+            state.editMultipleState = true
+        },
+        closeEditMultiple(state) {
+            state.editMultipleState =false
+        },
+        
         
     }
 

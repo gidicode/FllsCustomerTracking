@@ -1,5 +1,6 @@
 from math import fabs
 from pyexpat import model
+from tabnanny import check
 from tokenize import String
 import graphene
 from graphene_django import DjangoObjectType
@@ -95,6 +96,26 @@ class AddRiders(graphene.Mutation):
 
         return AddRiders(riders = riders)
 
+class EditMultiple(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID()
+        date_created = graphene.types.DateTime(required = True)
+        rider = graphene.Int(name="rider", required = True)
+    
+    multiple = graphene.Field(MultipleEntriesType)
+    
+    @classmethod
+    def mutate(root, info, id, date_created, rider):
+        multiple = MultipleEntries.objects.get(pk = id)
+        
+        if rider is not None:
+            riders = Riders.objects.get(pk = rider)            
+        multiple.Rider = riders
+        multiple.date_created = date_created
+        multiple.save()
+        return EditMultiple(multiple = multiple)
+
+        
 class CreateUser(graphene.Mutation):
     class Arguements:
         id = graphene.ID()
@@ -156,7 +177,7 @@ class CreateRidersLog(relay.ClientIDMutation):
             if input.get('rider') is not None:
                 rider_object = Riders.objects.get(pk = rider)
             riders_log.Rider = rider_object
-            #riders_log.save()
+            riders_log.save()
             return CreateRidersLog(  riders_log = riders_log) 
         if check_for_contact == True :            
             multiple_log = MultipleEntries.objects.create(                    
@@ -170,7 +191,7 @@ class CreateRidersLog(relay.ClientIDMutation):
             customer = Riders_Log.objects.get(customer_contact = customer_contact)                
             multiple_log.customer = customer
             multiple_log.Rider = rider_object2
-           # multiple_log.save()
+            multiple_log.save()
             
             get_the_riders_log = Riders_Log.objects.get(customer_contact = customer_contact)          
             get_the_riders_log.count.add(multiple_log)            
@@ -222,15 +243,40 @@ class DeleteRidersLog(relay.ClientIDMutation):
 
         return DeleteRidersLog( delete_log = delete_log )
 
+class BulkDeleteLog(relay.ClientIDMutation):
+    class Input:
+        id = graphene.List(graphene.ID)
+
+    bulk_delete_log = graphene.List(EntryNode)    
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, **input):            
+        id = input.get('id')        
+        check_global = []
+
+        #convert ids to int type
+        for ids in id:            
+            convert_ids = from_global_id(ids)[1]            
+            check_global.append(convert_ids)        
+
+        deleted_users = []
+        for ids in Riders_Log.objects.filter(pk__in = check_global):
+            ids.delete()    
+            deleted_users.append(ids)    
+ 
+        return BulkDeleteLog(bulk_delete_log = deleted_users)
+
 class RelayMutation(graphene.AbstractType):
     edit_riders_log2 = EditRidersLog.Field()
     deleteRidersLog2 = DeleteRidersLog.Field()
     createRidersLog2 = CreateRidersLog.Field()
+    bulk_delete_log = BulkDeleteLog.Field()
 
 class Mutation(AuthMutation, RelayMutation, graphene.ObjectType):
     addRiders = AddRiders.Field()
     createUser = CreateUser.Field()    
     editRidersLog = EditRidersLog.Field()
     deleteRidersLog = DeleteRidersLog.Field()
+    edit_multiple = EditMultiple.Field()
 
 schema = graphene.Schema(query=Query, mutation = Mutation)
