@@ -19,6 +19,9 @@ const store = createStore({
            multipleId:'',
            canEdit: true,
            deletePageState: false,           
+           deleteMultipleState: false,
+           ridersId:'',
+           showRidersDetails: false
         }
     },
 
@@ -112,8 +115,26 @@ const store = createStore({
         closeEditMultiple(state) {
             state.editMultipleState =false
         },
+
+        openDeletMultiple(state) {
+            state.deleteMultipleState = true
+        },
+
+        closeDeleteMultiple(state) {
+            state.deleteMultipleState = false
+        },
         
+        updateRidersId(state, payload) {
+            state.ridersId = payload
+        },
         
+        openShowRidersDetails(state){
+            state.showRidersDetails = true
+        },
+
+        closeShowRidersDetails(state) {
+            state.showRidersDetails = false
+        }
     }
 
 })

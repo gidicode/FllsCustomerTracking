@@ -1,5 +1,5 @@
 <template >    
-    <div class="container-fluid">
+    <div class="container-fluid the-design">        
         <div class="input-group">
             <span 
                 class="input-group-text icon" id="basic-addon1"><i class="fas fa-search text-white"></i></span>                     
@@ -26,8 +26,14 @@
                 <div class="p-2 bd-highlight  ">
                     <span 
                         @click="pushNumber(i.customerContact)"
-                         class="btn btn-sm btn-outline-success">
-                         Add
+                         class="btn btn-sm btn-outline-success"
+                         v-if="i.customerContact == getNumber"
+                         >
+                         Remove
+                    </span>
+                    <span v-else  @click="pushNumber(i.customerContact)"
+                    class="btn btn-sm btn-outline-warning">
+                        Add
                     </span>
                 </div>
             </div>              
@@ -46,6 +52,7 @@ export default {
     setup() {
         const store = useStore()       
         const uniqueCustomers = computed(() => RecordQueryUnique.value)                
+        const getNumber = computed(() => store.state.searchNameNumer)
 
         const searchName = ref('')
         
@@ -65,9 +72,12 @@ export default {
         const clearSearch = () => searchName.value = ''
 
         const pushNumber = (item) => {
-            store.commit('pushNumber', item)
-        }         
-       
+            if (getNumber.value == item ){               
+                store.commit('pushNumber', '')                                     
+            } else {
+                store.commit('pushNumber', item)
+            }            
+        }
 
         return {
             uniqueCustomers,
@@ -75,7 +85,8 @@ export default {
             searchedCustomers,
             clearSearch,
             pushNumber,                                
-            load
+            load,
+            getNumber
         }
     },
 }
@@ -95,6 +106,11 @@ export default {
 
     h6 {
         font-family: 'Comfortaa', cursive;
+    }
+
+    .the-design{
+        height: 100vh;
+        overflow: scroll
     }
 
 </style> 

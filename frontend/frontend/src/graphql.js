@@ -170,7 +170,7 @@ const { result: RecordList, loading } = useQuery(gql`
 `)
 
 const { result: GetRidersQuery } = useQuery(GETRIDER)
-export const GetRiders = useResult(GetRidersQuery, [])
+export const GetRiders = useResult(GetRidersQuery, [], data => data.ridersList)
 export const singleEntriesToday = useResult( EntriesToday, [], data => data.entriesTodaySingle )
 export const multipleEntriesToday = useResult( EntriesToday, [], data => data.entriesTodayMultiple)
 export const RecordQueryUnique = useResult( RecordList, [], data => data.customerEntries)

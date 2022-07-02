@@ -1,7 +1,3 @@
-from math import fabs
-from pyexpat import model
-from tabnanny import check
-from tokenize import String
 import graphene
 from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
@@ -34,12 +30,6 @@ class MultipleEntriesType(DjangoObjectType):
         model = MultipleEntries
 #relay
 
-""""class MultipleEntryNode(DjangoObjectType):
-    class Meta:
-        model = MultipleEntries
-        filter_fields = ['customer_contact', 'customer']
-        interfaces = ( graphene.relay.Node, )"""
-
 class EntryNode(DjangoObjectType):
     class Meta:
         model = Riders_Log
@@ -55,7 +45,7 @@ class Query(graphene.ObjectType):
     entriesTodaySingle = graphene.List(Riders_LogType)
     entriesTodayMultiple = graphene.List(MultipleEntriesType)
     entry = graphene.relay.Node.Field(EntryNode)
-    entries = DjangoFilterConnectionField(EntryNode)
+    entries = DjangoFilterConnectionField(EntryNode)    
     #multiples = graphene.relay.Node.Field(MultipleEntryNode)
     #multiplesNode = DjangoFilterConnectionField(MultipleEntryNode)
 
@@ -98,14 +88,13 @@ class AddRiders(graphene.Mutation):
 
 class EditMultiple(graphene.Mutation):
     class Arguments:
-        id = graphene.ID()
+        id = graphene.ID(required = True)
         date_created = graphene.types.DateTime(required = True)
         rider = graphene.Int(name="rider", required = True)
+        
+    multiple = graphene.Field(MultipleEntriesType)    
     
-    multiple = graphene.Field(MultipleEntriesType)
-    
-    @classmethod
-    def mutate(root, info, id, date_created, rider):
+    def mutate(root, info, id, date_created, rider):        
         multiple = MultipleEntries.objects.get(pk = id)
         
         if rider is not None:
@@ -115,6 +104,19 @@ class EditMultiple(graphene.Mutation):
         multiple.save()
         return EditMultiple(multiple = multiple)
 
+class DeleteMultiple(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID(required = True)
+
+    delete_multiple = graphene.Field(MultipleEntriesType)
+    
+    def mutate(root, info, id ): 
+        print("idd", id)
+        delete_multiple = MultipleEntries.objects.get(pk = id)
+        print("my multiple", delete_multiple)
+        delete_multiple.delete()        
+
+        #return DeleteMultiple(delete_multiple = delete_multiple)
         
 class CreateUser(graphene.Mutation):
     class Arguements:
@@ -237,9 +239,8 @@ class DeleteRidersLog(relay.ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **input):          
         id = input.get('id')        
 
-        delete_log = Riders_Log.objects.get(pk = from_global_id(id)[1])        
-        print("delete log:",delete_log)
-        delete_log.delete()        
+        delete_log = Riders_Log.objects.get(pk = from_global_id(id)[1])                
+        delete_log.delete()                
 
         return DeleteRidersLog( delete_log = delete_log )
 
@@ -277,6 +278,7 @@ class Mutation(AuthMutation, RelayMutation, graphene.ObjectType):
     createUser = CreateUser.Field()    
     editRidersLog = EditRidersLog.Field()
     deleteRidersLog = DeleteRidersLog.Field()
-    edit_multiple = EditMultiple.Field()
+    editMultiple = EditMultiple.Field()
+    deleteMultiple = DeleteMultiple.Field()
 
 schema = graphene.Schema(query=Query, mutation = Mutation)

@@ -10,36 +10,41 @@
             </div>
 
             <div class="p-2 bd-highlight">   
-                <p class="lh-1">
+                <p class="lh-1" v-if="loading">
+                    <strong> Calaculating....</strong>
+                </p> 
+                <p class="lh-1" v-else>
                     <strong> Unique:</strong> <br> {{ UniqueEntriesLength.length }}
                 </p>                                                                         
             </div>
 
             <div class="p-2 bd-highlight">                                               
-                <p class="lh-1" >
-                    <strong>Total</strong> <br> {{ EntriesLength }}
-                </p>    
+                <p class="lh-1" v-if="loading">
+                   <strong> Calaculating....</strong>
+                </p>   
+                <p class="lh-1" v-else>
+                    <strong>Multiple </strong> <br> {{ EntriesLength.length  }}
+                </p>   
             </div>            
         </div>               
     </section>
 </template>
 
 <script>
-import {toRef} from '@vue/reactivity'
+import { RecordQueryUnique, RecordQueryMultiple, load} from '../../../graphql'
 export default {
-    name: 'RecordsHeading',
-    props: {
-        allEntries: Object,
-        allCustomers: Object,
-    },
+    name: 'RecordsHeading',   
+    setup() {
+        const EntriesLength =  RecordQueryMultiple
+        const UniqueEntriesLength =  RecordQueryUnique            
+        const loading = load
 
-    setup(props) {
-        const EntriesLength = toRef(props, 'allEntries')
-        const UniqueEntriesLength = toRef(props, 'allCustomers')                
+        console.log("Entries", EntriesLength.value.length)
 
         return {
             EntriesLength,
-            UniqueEntriesLength
+            UniqueEntriesLength,
+            loading
         }
     }
 }

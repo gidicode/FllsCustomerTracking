@@ -80,6 +80,7 @@ export default {
         onDone(() => {
             deleted.value = true
             hideText.value = false
+            store.commit('closeRecordDetails')
         })
 
         return {            

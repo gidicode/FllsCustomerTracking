@@ -1,113 +1,141 @@
 <template>
 
-    <div>
-        <div class="d-flex flex-row bd-highlight rider-name mb-3 justify-content-between">
-            <div class="p-2 bd-highlight">
-                <h6 class="mt-2"> 
-                    <span class="opacity-75"> Rider:</span> 
-                    {{ RiderName }}
-                </h6>                
-            </div>
-            <div class="p-2 bd-highlight">
-                <h6 class="length-bg">
-                    <span class="opacity-75"> Count: </span>
-                    {{ joinedList.length }}
-                </h6>
-            </div>            
+    <div class="the-body">                          
+        <div v-if="load">
+            <p>Loading...</p>
+        </div>
+        <aside v-else>                              
+            <div v-if="showRidersDetails" 
+                class="d-flex flex-row bd-highlight rider-name mb-3 justify-content-between sticky-top">
+                <div class="p-2 bd-highlight">
+                    <h6 class="mt-2"> 
+                        <span class="opacity-75"> Rider:</span> 
+                        {{ RiderName[0]}}
+                    </h6>                
+                </div>
+                <div class="p-2 bd-highlight">
+                    <h6 class="length-bg">
+                        <span class="opacity-75"> Count: </span>
+                        {{ searchRider.length }}
+                    </h6>
+                </div>            
 
-            <div class="p-2 bd-highlight expand">
-                <div class="input-group">
-                    <span class="input-group-text icon" id="basic-addon1"><i class="fas fa-search text-white"></i></span>                     
-                    <input type="text" v-model="searchName" class="form-control" placeholder="Search..." aria-describedby="basic-addon1"/>
-                </div>    
-            </div>
-        </div>        
+                <div class="p-2 bd-highlight expand">                    
+                    <div class="input-group">
+                        <span class="input-group-text icon" id="basic-addon1"><i class="fas fa-search text-white"></i></span>                     
+                        <input type="text" v-model="searchName" class="form-control" placeholder="Search..." aria-describedby="basic-addon1"/>
+                    </div>    
+                </div>
+            </div>        
                 
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                <th scope="col">S/N</th>
-                <th scope="col">Date</th>
-                <th scope="col">Cus. Name</th>
-                <th scope="col">Cus. Number</th>                
-                </tr>
-            </thead>
-            <tbody >
-                <tr v-for="(item, index) in joinedList" :key="item.id">
-                    <td scope="row">{{ index + 1}}</td>
-                    <td>{{ DisplayDate(item.dateCreated)}}</td> 
-                    <td  v-if="item.__typename == 'MultipleEntriesType' ">
-                        {{ item.customer.customerName}}
-                    </td>
-                    <td v-else>
-                        {{item.customerName}}
-                    </td>
-                     <td  v-if="item.__typename == 'MultipleEntriesType' ">
-                        {{ item.customer.customerContact}}
-                    </td>
-                    <td v-else>
-                        {{ item.customerContact}}
-                    </td>                                                                               
-                </tr>
-            </tbody>
-        </table>                  
+            <table class="table table-hover" v-if="showRidersDetails">
+                <thead>
+                    <tr>
+                    <th scope="col">S/N</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Cus. Name</th>
+                    <th scope="col">Cus. Number</th>                
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(item, index) in searchRider" :key="item.id">
+                        <td scope="row">{{ index + 1}}</td>
+                        <td>{{ DisplayDate(item.dateCreated)}}</td> 
+                        <td  v-if="item.__typename == 'MultipleEntriesType' ">
+                            {{ item.customer.customerName}}
+                        </td>
+                        <td v-else>
+                            {{item.customerName}}
+                        </td>
+                        <td  v-if="item.__typename == 'MultipleEntriesType' ">
+                            {{ item.customer.customerContact}}
+                        </td>
+                        <td v-else>
+                            {{ item.customerContact}}
+                        </td>                                                                               
+                    </tr>
+                </tbody>
+            </table>  
+
+            <section v-else>
+                <h1>Click on a rider name to view details</h1>
+            </section>    
+        </aside>   
+
+                        
     </div>
 </template>
 
 <script>
-import { computed, ref } from '@vue/reactivity'
-import { useRoute } from 'vue-router'
-import { RecordQueryUnique, RecordQueryMultiple } from '../../graphql'
-import { watch } from 'vue'
+import { computed, onMounted, ref, watch, toRef } from 'vue'
+import { useStore } from 'vuex'
+import { RecordQueryUnique, RecordQueryMultiple, load } from '../../graphql'
+//import { watch } from 'vue'
 import moment from 'moment'
 
 export default {
-    setup() {
-        const route = useRoute()
+    name:'RidersDetails',
+    props: {
+        allRiders: Object
+    },
+    setup(props) {
+        const store = useStore()
+        const getRidersId = computed(() => store.state.ridersId)
+        const showRidersDetails = computed(() => store.state.showRidersDetails)
         const MultipleCustomers = computed(() => RecordQueryMultiple.value)        
         const SingleCustomer = computed(() => RecordQueryUnique.value)
-        const RiderName = computed(() => route.params.name)
+        const AllRiders = toRef(props, 'allRiders')
+
+        const RiderName = computed(() => 
+            AllRiders.value.filter(item => item.id == getRidersId.value)
+            .map(item => item.riderName)
+        )
 
         function DisplayDate(value) {
             return moment(value).format('DD-MM-YYYY')
-        }
-         watch(
-            () => route.params,
-            () => {
-                filterRider,
-                filterRider2                
-            }
-        )
+        }         
 
-        const filterRider = computed(() => MultipleCustomers.value.filter(
-            getRiders => getRiders.Rider.id == route.params.id
-        ))        
+        const mergeCustomers = ref([])
+        watch(load,
+        () => {
+            SingleCustomer.value.forEach(element => mergeCustomers.value.push(element))
+            MultipleCustomers.value.forEach(element => mergeCustomers.value.push(element))            
+            console.log('wow')
+        })
 
-        const filterRider2 = computed(() => SingleCustomer.value.filter(
-                singleCustomers => singleCustomers.Rider.id == route.params.id
-            ))
-
-        const joinedList = computed(() => filterRider.value.concat(filterRider2.value))
+        onMounted(() => {
+            SingleCustomer.value.forEach(element => mergeCustomers.value.push(element))
+            MultipleCustomers.value.forEach(element => mergeCustomers.value.push(element ))      
+        })                      
+    
+        const filterRider = computed(() => mergeCustomers.value.filter(
+            getRiders => getRiders.Rider.id == getRidersId.value
+        ))                 
 
         const searchName = ref('')
 
-        const searchWater = computed(() => {
-            return joinedList.value.filter((joinedListS) => {
-                return (
-                    console.log(joinedListS.customer),
-                    joinedListS.customer
-                    .toLowerCase()
+        const searchRider = computed(() => {
+            return filterRider.value.filter((item) => {
+                return (                    
+                    item.customerContact.toLowerCase()
                     .indexOf(searchName.value.toLowerCase()) != -1
                 )
             })
         })
+
         //console.log(searchWater.value)
         return {          
-            DisplayDate,
-            joinedList,
-            RiderName,
-            searchWater,
+            DisplayDate,            
+            //RiderName,
+            searchRider,
             searchName,
+            getRidersId,
+            filterRider,
+            load,
+            showRidersDetails,
+            SingleCustomer,     
+            mergeCustomers,
+            RiderName    
         }
     },
 }
@@ -137,6 +165,11 @@ a{
 
 .icon{
     background-color: #39649c;
+}
+
+.the-body{
+    height: 100vh;
+    overflow: scroll;
 }
 </style>
 

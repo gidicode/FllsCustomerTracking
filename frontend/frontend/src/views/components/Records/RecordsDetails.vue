@@ -54,8 +54,7 @@
                     </p>
                 </div>
             </div>
-            {{ getMultipleId }}
-            {{multipleState}}
+
             <div class="p-2 bd-highlight">
                <div class="details-section">
                     <table class="table text-light table-borderless">                        
@@ -67,6 +66,7 @@
                                 <th scope="col">Rider</th>                                                                                      
                             </tr>
                         </thead>
+                        
                         <tbody v-for="i in filterCustomers" :key="i.id">
                             <div v-if="i.node.count == '' ">
                                 <p class="nothing">Nothing to see here</p>
@@ -75,16 +75,16 @@
                                 <td scope="row">{{ index + 2}}</td>
                                 <td> <small> {{ dateTime(items.dateCreated) }} </small> </td>                                                            
                                 <td> <small> {{ items.Rider.riderName}} </small> </td>
-                                <td @click="pushMultipleId(items.id), changeMultipleState()"> <small> Edit </small> </td>
+                                <td @click="pushMultipleId(items.id), changeMultipleState()">                                     
+                                    Edit                                                                
+                                </td>
+                                <td @click="pushMultipleId(items.id), changeDeleteMultipleState()">
+                                    Delete
+                                </td>
                             </tr>                           
                         </tbody>
                     </table>
                </div>
-            </div>
-
-            <div class="p-2 bd-highlight">
-                 
-                <p></p>
             </div>
         </div>      
     </aside>
@@ -122,6 +122,7 @@ export default {
         }
         const showDeletePage = () => store.commit('showDeletePage')
         const changeMultipleState = () => store.commit('openEditMultiple')
+        const changeDeleteMultipleState = () => store.commit('openDeletMultiple')
         
         watch( GetId, 
             () => { filterCustomers }
@@ -144,6 +145,7 @@ export default {
             getMultipleId,
             changeMultipleState,
             multipleState,
+            changeDeleteMultipleState
         }
     },
 }
