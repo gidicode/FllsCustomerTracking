@@ -63,7 +63,7 @@ export default {
     },
 
     setup() {
-        const store = useStore()            
+        const store = useStore()             
         const searchNamess = computed(() => store.state.searchNameNumer)
         const schema = yup.object({
             customerName: yup.string(),

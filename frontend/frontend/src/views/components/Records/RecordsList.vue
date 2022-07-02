@@ -112,6 +112,11 @@
                     <editMultipleRecord 
                     :multipleCustomers = 'result'/>
                 </aside>
+
+                <aside class="back-drop" v-if="deleteMutipleState">
+                    <DeleteMultiple 
+                    :multipleCustomers = 'result'/>
+                </aside>
             </div>    
         </div>                                  
     </div>
@@ -125,6 +130,7 @@ import EditRecords from '../Records/EditRecords.vue'
 import DeleteCustomer from '../DeleteCustomer.vue'
 import SingleSms from '../SingleSms.vue'
 import BulkDelete from '../BulkDelete.vue'
+import DeleteMultiple from '../DeleteMultiple.vue'
 import editMultipleRecord from '../Records/editMultipleRecord.vue'
 import { ENTRIES_QUERY } from '../../../graphql'
 import { useQuery } from '@vue/apollo-composable'
@@ -141,7 +147,8 @@ export default {
         DeleteCustomer,
         RecordsHeading,
         BulkDelete,
-        editMultipleRecord
+        editMultipleRecord,
+        DeleteMultiple
     },    
 
     props: {      
@@ -163,7 +170,6 @@ export default {
             store.commit('getId', item)
         }                 
         
-
         //State
         const detailsState = computed(() => store.state.recordDetailsState)
         const editRecordState = computed(() => store.state.editRecordState)                                         
@@ -171,6 +177,7 @@ export default {
         const smsState = computed(() => store.state.personalSms)
         const deletePageState = computed(() => store.state.deletePageState)
         const editMutiple = computed(() => store.state.editMultipleState)
+        const deleteMutipleState = computed(() => store.state.deleteMultipleState)
 
         onUnmounted(() => {
             store.commit('closeRecordDetails')                        
@@ -261,6 +268,7 @@ export default {
             recordsHeadingState,
             smsState,
             deletePageState,
+            deleteMutipleState,
 
             customersId,            
 
